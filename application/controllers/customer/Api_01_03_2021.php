@@ -966,47 +966,34 @@ require APPPATH . 'libraries/REST_Controller.php';
         $menu_list = $this->Customer->get_menu_list_data($admin_id);
         if(!empty($menu_list))
         {
-
          foreach ($menu_list as $row)
            {
-             $gst       =$this->Supervisor->getGst($row['menu_category_id'],$admin_id);
-
             $menuhalfprice=$row['menu_half_price'];
-
             if(!empty($menuhalfprice))
             {
               $menu_half_price=$row['menu_half_price'];
-              $menu_half_price_gst =($menu_half_price)*$gst/100;
-
             }
             else
             {
               $menu_half_price='';
-               $menu_half_price_gst='';
             }
             $menufullprice=$row['menu_full_price'];
             if(!empty($menufullprice))
             {
               $menu_full_price=$row['menu_full_price'];
-              $menu_full_price_gst =($menu_full_price)*$gst/100;
-
             }
             else
             {
               $menu_full_price='';
-              $menu_full_price_gst='';
             }
             $menufixprice=$row['menu_fix_price'];
             if(!empty($menufixprice))
             {
               $menu_fix_price=$row['menu_fix_price'];
-              $menu_fix_price_gst =($menu_fix_price)*$gst/100;
-
             }
             else
             {
               $menu_fix_price='';
-              $menu_fix_price_gst='';
             }
             $nutrientcounts=$row['nutrient_counts'];
           if(!empty($nutrientcounts))
@@ -1021,19 +1008,12 @@ require APPPATH . 'libraries/REST_Controller.php';
             $data['menu_id'] =   $row['menu_id'];
             $data['admin_id'] =   $row['admin_id'];
             $data['menu_name'] =   $row['menu_name'];
-           
             $data['menu_image'] =   base_url().'uploads/'.$row['menu_image'];
             $data['menu_detail'] =   $row['menu_detail'];
             $data['menu_half_price'] =   $menu_half_price;
             $data['menu_full_price'] =  $menu_full_price;
             $data['menu_fix_price'] =   $menu_fix_price;
             $data['nutrient_counts'] =   $nutrient_counts;
-            $data['gst'] =  "$gst";
-            $data['menu_half_price_gst'] = "$menu_half_price_gst";
-            $data['menu_full_price_gst'] = "$menu_full_price_gst";
-            $data['menu_fix_price_gst'] =  "$menu_fix_price_gst";
-            
-          
             $data['message'] = 'Success';
             $data['status']  ='1';
 
@@ -1763,19 +1743,18 @@ require APPPATH . 'libraries/REST_Controller.php';
         }
 
       /*.........super sub Category   Api For hawker  ---- */
-  public function GenrateRSA_post()
+  public function pamentTxns_post()
   {
     try
     {
 
        $order_id=$this->input->post('order_id');
-       $path=APPPATH."libraries/cacert.pem";
+       $path=FCPATH."libraries/cacert.pem";
+       
         if(!empty($order_id))
         {
             $result=paymentTransaction($order_id,$path);
-            $arry['data']=array('status'=>'1','message'=>$result);
-            $this->response($arry, 200);
-            // print_r($result);exit;
+            print_r($result);exit;
         }else
         {
           $arry['data']=array('status'=>'0','message'=>'failed');
@@ -1783,7 +1762,7 @@ require APPPATH . 'libraries/REST_Controller.php';
         }
     }catch(Exception $e)
     {
-      echo $e->getMessage(); 
+      echo $e->getMessage();
       $error = array('status' =>'0', "message" => "Internal Server Error - Please try Later.","StatusCode"=> "HTTP405");
       $this->response($error, 200);
     }

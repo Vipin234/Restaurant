@@ -376,7 +376,7 @@ require APPPATH . 'libraries/REST_Controller.php';
         $now1 = date('Y-m-d H:i:s');
         $data->admin_id=$admin_id;
         $data->cus_id=$cus_id;
-        $data->table_no=ltrim($table_no,'0');
+        $data->table_no=$table_no;
         $data->menu_item_name=$menu_item_name;
         $data->quantity=$quantity;
         $data->half_and_full_status=$half_and_full_status;
@@ -391,7 +391,7 @@ require APPPATH . 'libraries/REST_Controller.php';
         $data->create_date=$now;
         $data->date=$now1;
         $data->status='1';
-        $que=$this->db->query("select * from tbl_order_detail_for_restaurant where table_no='".$table_no."' and order_status NOT IN('Closed','Rejected') and admin_id='$admin_id' and payment_status!='1'");
+        $que=$this->db->query("select * from tbl_order_detail_for_restaurant where table_no='".$table_no."' and order_status!='Complete' and admin_id='$admin_id' and payment_status!='1'");
 
          $row = $que->num_rows();
         if($row>0)
@@ -404,11 +404,11 @@ require APPPATH . 'libraries/REST_Controller.php';
          else
          {
         $result = $this->Customer->add_order_detail_restaurant($data);
-        if($result < 9)
+        if($result < 99)
         {
           $alphanumerric='00'.$result;
 
-        }else if($result > 9 && $result < 99)
+        }else if($result > 99 && $result < 999)
         {
           $alphanumerric='0'.$result;
         }else
@@ -435,8 +435,7 @@ require APPPATH . 'libraries/REST_Controller.php';
                                             'menu_price'=>$menu_price[$i],
                                             'order_id'=>$alphanumerric,
                                             'status'=>'1',
-                                            'admin_id'=>$admin_id,
-                                            'creation_date'=>date('Y-m-d H:s:i')
+                                            'admin_id'=>$admin_id
                                               );
                           
                           }
@@ -491,12 +490,12 @@ require APPPATH . 'libraries/REST_Controller.php';
         $now1 = date('Y-m-d H:i:s');
         $data->order_id=$order_id;
         $data->admin_id=$admin_id;
-        if($max_id < 9)
+        if($max_id < 99)
         {
                   $data->sub_order_id='00'.($max_id+1);
                   $sub_order_id='00'.($max_id+1);
 
-        }else if($max_id < 99 && $max_id > 9)
+        }else if($max_id < 999 && $max_id > 99)
         {
                   $data->sub_order_id='0'.($max_id+1);
                   $sub_order_id='0'.($max_id+1);
@@ -544,8 +543,7 @@ require APPPATH . 'libraries/REST_Controller.php';
                                 'sub_order_id'=>$sub_order_id,
                                 'order_id'=>$order_id,
                                 'status'=>'1',
-                                'admin_id'=>$admin_id,
-                                'creation_date'=>date('Y-m-d H:s:i')
+                                'admin_id'=>$admin_id
                                 );
               
               }
@@ -598,7 +596,8 @@ require APPPATH . 'libraries/REST_Controller.php';
               // print_r($data);exit;
               $result['order_id']                                     =$data[$i]['order_id'];
               $result['admin_id']                                     =$data[$i]['admin_id'];
-              $result['cus_id']                                       =$data[$i]['cus_id'];
+              $result['cus_id']                    
+                                 =$data[$i]['cus_id'];
               $MwnuItemResult                                         =$this->Customer->getMenuItemForOrder($result['order_id'],$result['admin_id']);
                   foreach($MwnuItemResult as $menuValue)
                   {
@@ -607,7 +606,6 @@ require APPPATH . 'libraries/REST_Controller.php';
                     $menuhalf_and_full_status[]                       =$menuValue['half_and_full_status'];
                     $menumenu_price[]                                 =$menuValue['menu_price'];
                     $menumenu_id[]                                    =$menuValue['id'];
-                    $menumenu_status[]                                =$menuValue['status'];
 
                   }
               $result['id']                                           =implode(',',$menumenu_id).',';
@@ -615,7 +613,6 @@ require APPPATH . 'libraries/REST_Controller.php';
               $result['quantity']                                     =implode(',',$menuquantity).',';
               $result['half_and_full_status']                         =implode(',',$menuhalf_and_full_status).',';
               $result['menu_price']                                   =implode(',',$menumenu_price).',';    
-              $result['menuOrderItemStatus']                          =implode(',',$menumenu_status).',';    
               $result['total_item']                                   =$data[$i]['total_item'];
               $result['table_no']                                     =$data[$i]['table_no'];
               $result['total_price']                                  =$data[$i]['total_price'];
@@ -650,7 +647,6 @@ require APPPATH . 'libraries/REST_Controller.php';
               $result['status']                                       =$data[$i]['status'];
               $result['inv_created_by']                               =$data[$i]['inv_created_by'];
               $result['RestaurentName']                               =$data[$i]['RestaurentName'];
-              $result['discount']                                     =$data[$i]['discount'];
               $OrderCalulationResult                                  =$this->Customer->getOrderCalculation($data[$i]['order_id'],$data[$i]['admin_id']);
              // print_r($OrderCalulationResult);
               $totalAmount                                            =$OrderCalulationResult[0]['menu_price'];
@@ -672,13 +668,12 @@ require APPPATH . 'libraries/REST_Controller.php';
                       $result2['sub_order_id']                          =$value['sub_order_id'];
                       $result2['gst_amount']                            =$value['gst_amount'];
 
-                      $SubOrderCalulationResult                         =$this->Customer->getSubOrderCalculation($data[$i]['order_id'],$data[$i]['admin_id'],$value['sub_order_id']);
+                      $SubOrderCalulationResult                                  =$this->Customer->getSubOrderCalculation($data[$i]['order_id'],$data[$i]['admin_id'],$value['sub_order_id']);
                       //print_r($SubOrderCalulationResult);
-                      $subtotalAmount            =$subtotalAmount+$SubOrderCalulationResult[0]['menu_price'];
-                      $subtotalqty               =$subtotalqty+$SubOrderCalulationResult[0]['quantity'];
-                      $subtotalNetPayableAmount  =$subtotalNetPayableAmount+$subtotalAmount+($subtotalAmount*$value['gst_amount']/100);
-                      $subtotalGstAmount         =$subtotalGstAmount+($subtotalAmount*$value['gst_amount']/100);
-                      
+                      $subtotalAmount                                            =$subtotalAmount+$SubOrderCalulationResult[0]['menu_price'];
+                      $subtotalqty                                               =$subtotalqty+$SubOrderCalulationResult[0]['quantity'];
+                      $subtotalNetPayableAmount                                  =$subtotalNetPayableAmount+$subtotalAmount+($subtotalAmount*$value['gst_amount']/100);
+                      $subtotalGstAmount                                         =$subtotalGstAmount+($subtotalAmount*$value['gst_amount']/100);
 
 
                       $menuResult2 =$this->Customer->getMenuItemForSubOrder($data[$i]['order_id'],$data[$i]['admin_id'],$result2['sub_order_id']);
@@ -690,7 +685,6 @@ require APPPATH . 'libraries/REST_Controller.php';
                         $menuhalf_and_full_status2[]                    =$menuValue2['half_and_full_status'];
                         $menumenu_price2[]                              =$menuValue2['menu_price'];
                         $menu_id[]                                      =$menuValue2['id'];
-                        $menuSubOrderStatus[]                           =$menuValue2['status'];
 
                       } 
               
@@ -699,7 +693,6 @@ require APPPATH . 'libraries/REST_Controller.php';
                       $result2['quantity']                              =implode(',',$menuquantity2).',';
                       $result2['half_and_full_status']                  =implode(',',$menuhalf_and_full_status2).',';
                       $result2['menu_price']                            =implode(',',$menumenu_price2).',';
-                      $result2['menuSubOrderItemStatus']                =implode(',',$menuSubOrderStatus).',';
                       $result2['total_item']                            =$value['total_item'];
                       $result2['net_pay_amount']                        =$value['net_pay_amount'];
                       $result2['gst_amount_price']                      =$value['gst_amount_price'];
@@ -733,7 +726,6 @@ require APPPATH . 'libraries/REST_Controller.php';
                       $menuhalf_and_full_status2=array();
                       $menumenu_price2=array();
                       $menu_id=array();
-                      $menuSubOrderStatus=array();
                     }
                     // $subtotalAmount='';
                     // $subtotalqty='';
@@ -741,14 +733,11 @@ require APPPATH . 'libraries/REST_Controller.php';
                     // $subtotalGstAmount='';
                   }
                   $result['sub_order_data']     =$finalarray;
-                  $result['totalOfOrderamount'] =($subtotalAmount+$totalAmount);
+                  $result['totalOfOrderamount'] =$subtotalAmount+$totalAmount;
                   $result['totalofqty']         =$subtotalqty+$totalqty;
-                  $result['amount_with_disc']   =($subtotalAmount+$totalAmount)-(($subtotalAmount+$totalAmount)*$data[$i]['discount'])/100;
-                  $result['orderDiscount']      =(($subtotalAmount+$totalAmount)*$data[$i]['discount'])/100;
-                  // $result['discount']           =$data[$i]['discount'];
                   $totalGst                     =($subtotalAmount+$totalAmount)*5/100;
+                  $result['totalofnetpay']      =$result['totalOfOrderamount']+$totalGst;
                   $result['totalofgst']         =$totalGst;
-                  $result['totalofnetpay']      =$result['amount_with_disc']+$totalGst;
                   array_push($arr, $result);
                   $finalarray=array();
                   $menuImages=array();
@@ -756,7 +745,6 @@ require APPPATH . 'libraries/REST_Controller.php';
                   $menuhalf_and_full_status=array();
                   $menumenu_price=array();
                   $menumenu_id=array();
-                  $menumenu_status=array();
           }
                 $response->status = 1;
                 $response->message = "success";
@@ -772,14 +760,14 @@ require APPPATH . 'libraries/REST_Controller.php';
 
      public function get_detail_for_particular_order_for_customer_post()
       {
-        $response         =new StdClass();
-        $response1        =new StdClass();
-        $result           =array();
-        $result2          =array();
-        $order_id         =$this->input->post('order_id');
-        $data             =$this->Customer->getGroupDatas($order_id);
-        //print_r($data);exit;
-        $arr              =array();
+        $response   =   new StdClass();
+        $response1   =   new StdClass();
+        $result       =   array();
+        $order_id=$this->input->post('order_id');
+        /*$order_status=$this->input->post('order_status');*/
+
+        $data = $this->Customer->getGroupDatas($order_id);
+        $arr = array();
         if(empty($data))
         {
           $response->status = 0;
@@ -788,71 +776,13 @@ require APPPATH . 'libraries/REST_Controller.php';
         }
         else
         {
-                for($i=0;$i<count($data);$i++)
-                {
-                    $result['order_id']           =$data[$i]['order_id'];
-                    $result['admin_id']           =$data[$i]['admin_id'];
-                    $result['RestaurentName']     =$data[$i]['RestaurentName'];
-                    $result['table_no']           =$data[$i]['table_no'];
-                    $result['status']             =$data[$i]['status'];
-                    $MenuItemResult               =$this->Customer->getDataOrderWises($data[$i]['order_id'],$data[$i]['admin_id']);
-
-                    foreach($MenuItemResult as $menuValue)
-                    {
-                        $menuImages[]               =$menuValue['menu_item_name'];
-                        $menuquantity[]             =$menuValue['quantity'];
-                        $menuhalf_and_full_status[] =$menuValue['half_and_full_status'];
-                        $menumenu_price[]           =$menuValue['menu_price'];
-                        $menumenu_id[]              =$menuValue['id'];
-                    }
-                        $result['id']                       =implode(',',$menumenu_id).',';
-                        $result['menu_item_name']           =implode(',',$menuImages).',';
-                        $result['cus_id']                   =$data[$i]['cus_id'];
-                        $result['quantity']                 =implode(',',$menuquantity).',';
-                        $result['half_and_full_status']     =implode(',',$menuhalf_and_full_status).',';
-                        $result['menu_price']               =implode(',',$menumenu_price).',';
-
-                        $subOrderResult=$this->Customer->getSubOrder($data[$i]['order_id'],$data[$i]['admin_id']);
-                        foreach($subOrderResult as $value2)
-                        {
-                            $result2['order_id']           =$value2[$i]['order_id'];
-                            $result2['sub_order_id']       =$value2[$i]['sub_order_id'];
-                            $result2['admin_id']           =$value2[$i]['admin_id'];
-                            $MenuSubItemResult             =$this->Customer->getSubOrderMenuItems($value2[$i]['order_id'],$value2[$i]['sub_order_id'],$value2[$i]['admin_id']);
-
-                                foreach($MenuItemResult2 as $menuValue2)
-                                {
-                                    $menuImages2[]               =$menuValue2['menu_item_name'];
-                                    $menuquantity2[]             =$menuValue2['quantity'];
-                                    $menuhalf_and_full_status2[] =$menuValue2['half_and_full_status'];
-                                    $menumenu_price2[]           =$menuValue2['menu_price'];
-                                    $menumenu_id2[]              =$menuValue2['id'];
-                                }
-
-                                  $result2['id']                       =implode(',',$menumenu_id2).',';
-                                  $result2['menu_item_name']           =implode(',',$menuImages2).',';
-                                  $result2['quantity']                 =implode(',',$menuquantity2).',';
-                                  $result2['half_and_full_status']     =implode(',',$menuhalf_and_full_status2).',';
-                                  $result2['menu_price']               =implode(',',$menumenu_price2).',';
-                                  $result2['status']                   =$value2[$i]['status'];
-                                  $menuImages2=array();
-                                  $menuquantity2=array();
-                                  $menuhalf_and_full_status2=array();
-                                  $menumenu_price2=array();
-                                  $menumenu_id2=array();
-
-                        }
-
-                       
-                       $result['sub_order_data']=$result2;
-                       $menuImages=array();
-                       $menuquantity=array();
-                       $menuhalf_and_full_status=array();
-                       $menumenu_price=array();
-                       $menumenu_id=array();
-                       array_push($arr, $result);
-                  
-                }     
+          for($i=0;$i<count($data);$i++)
+        {
+            $result['order_id'] = $data[$i]['order_id'];
+            $result['data'] = $this->Customer->getDataOrderWises($data[$i]['order_id']);
+            array_push($arr, $result);
+          
+        }
         $response->status = 1;
         $response->message = "success";
         $response->data = $arr;
@@ -865,14 +795,14 @@ require APPPATH . 'libraries/REST_Controller.php';
 
         public function get_detail_for_particular_order_by_customer_post()
         {
-              $response         =new StdClass();
-        $response1        =new StdClass();
-        $result           =array();
-        $result2          =array();
-        $order_id         =$this->input->post('order_id');
-        $data             =$this->Customer->getGroupDatas($order_id);
-        // print_r($data);exit;
-        $arr              =array();
+        $response   =   new StdClass();
+        $response1   =   new StdClass();
+        $result       =   array();
+        $order_id=$this->input->post('order_ids');
+        /*$order_status=$this->input->post('order_status');*/
+
+        $data = $this->Customer->getGroupDatas($order_id);
+        $arr = array();
         if(empty($data))
         {
           $response->status = 0;
@@ -881,71 +811,13 @@ require APPPATH . 'libraries/REST_Controller.php';
         }
         else
         {
-                for($i=0;$i<count($data);$i++)
-                {
-                    $result['order_id']           =$data[$i]['order_id'];
-                    $result['admin_id']           =$data[$i]['admin_id'];
-                    $result['RestaurentName']     =$data[$i]['RestaurentName'];
-                    $result['table_no']           =$data[$i]['table_no'];
-                    $result['status']             =$data[$i]['status'];
-                    $MenuItemResult               =$this->Customer->getDataOrderWises($data[$i]['order_id'],$data[$i]['admin_id']);
-
-                    foreach($MenuItemResult as $menuValue)
-                    {
-                        $menuImages[]               =$menuValue['menu_item_name'];
-                        $menuquantity[]             =$menuValue['quantity'];
-                        $menuhalf_and_full_status[] =$menuValue['half_and_full_status'];
-                        $menumenu_price[]           =$menuValue['menu_price'];
-                        $menumenu_id[]              =$menuValue['id'];
-                    }
-                        $result['id']                       =implode(',',$menumenu_id).',';
-                        $result['menu_item_name']           =implode(',',$menuImages).',';
-                        $result['cus_id']                   =$data[$i]['cus_id'];
-                        $result['quantity']                 =implode(',',$menuquantity).',';
-                        $result['half_and_full_status']     =implode(',',$menuhalf_and_full_status).',';
-                        $result['menu_price']               =implode(',',$menumenu_price).',';
-
-                        $subOrderResult=$this->Customer->getSubOrder($data[$i]['order_id'],$data[$i]['admin_id']);
-                        foreach($subOrderResult as $value2)
-                        {
-                            $result2['order_id']           =$value2[$i]['order_id'];
-                            $result2['sub_order_id']       =$value2[$i]['sub_order_id'];
-                            $result2['admin_id']           =$value2[$i]['admin_id'];
-                            $MenuSubItemResult             =$this->Customer->getSubOrderMenuItems($value2[$i]['order_id'],$value2[$i]['sub_order_id'],$value2[$i]['admin_id']);
-
-                                foreach($MenuItemResult2 as $menuValue2)
-                                {
-                                    $menuImages2[]               =$menuValue2['menu_item_name'];
-                                    $menuquantity2[]             =$menuValue2['quantity'];
-                                    $menuhalf_and_full_status2[] =$menuValue2['half_and_full_status'];
-                                    $menumenu_price2[]           =$menuValue2['menu_price'];
-                                    $menumenu_id2[]              =$menuValue2['id'];
-                                }
-
-                                  $result2['id']                       =implode(',',$menumenu_id2).',';
-                                  $result2['menu_item_name']           =implode(',',$menuImages2).',';
-                                  $result2['quantity']                 =implode(',',$menuquantity2).',';
-                                  $result2['half_and_full_status']     =implode(',',$menuhalf_and_full_status2).',';
-                                  $result2['menu_price']               =implode(',',$menumenu_price2).',';
-                                  $result2['status']                   =$value2[$i]['status'];
-                                  $menuImages2=array();
-                                  $menuquantity2=array();
-                                  $menuhalf_and_full_status2=array();
-                                  $menumenu_price2=array();
-                                  $menumenu_id2=array();
-
-                        }
-
-                       
-                       $result['sub_order_data']=$result2;
-                       $menuImages=array();
-                       $menuquantity=array();
-                       $menuhalf_and_full_status=array();
-                       $menumenu_price=array();
-                       $menumenu_id=array();
-                       array_push($arr, $result);
-                  
-                }     
+          for($i=0;$i<count($data);$i++)
+        {
+            $result['order_id'] = $data[$i]['order_id'];
+            $result['data'] = $this->Customer->getDataOrderWises($data[$i]['order_id']);
+            array_push($arr, $result);
+          
+        }
         $response->status = 1;
         $response->message = "success";
         $response->data = $arr;
@@ -1042,19 +914,17 @@ require APPPATH . 'libraries/REST_Controller.php';
         $get_city = $this->Customer->get_city_list_data();
         if(!empty($get_city))
         {
-          $data['city'] = 'All Cities';
-          $data['message'] = 'Success';
-          $data['status']  ='1';
-          array_push($result,$data);
          foreach ($get_city as $row)
            {
             $data['city'] =   $row['city'];
+           
             $data['message'] = 'Success';
             $data['status']  ='1';
+
             array_push($result,$data);
+
            } 
             
-
               $response->data = $result;
          }
          else

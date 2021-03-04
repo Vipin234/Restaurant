@@ -20,6 +20,574 @@ require APPPATH . 'libraries/REST_Controller.php';
     $this->load->helper('main_helper');
   }
 
+  /////////////////////////  Cron job ///////////////////////////////
+   public function notification_by_customer()
+   {
+    $notifieddata = $this->User->near_by_hawker_notified_data();
+    if(!empty($notifieddata))
+    {
+     foreach ($notifieddata as $rowdata)
+    {
+    $cus_id=$rowdata['cus_id'];
+    $latitudeFrom=$rowdata['latitude'];
+    $longitudeFrom=$rowdata['longitude'];
+    $notification_id=$rowdata['notification_id'];
+    $cat_id=$rowdata['cat_id'];
+    $sub_cat_id=$rowdata['sub_cat_id'];
+    $super_sub_cat_id=$rowdata['super_sub_cat_id'];
+    $radius=$rowdata['radius'];
+    $city=$rowdata['city'];
+    $status=$rowdata['status'];
+    $date_time=$rowdata['date_time'];
+    $set_time=$rowdata['date_time'];
+    $status=$rowdata['status'];
+    if($sub_cat_id=='' or $sub_cat_id=='0')
+    {
+    $getdata = $this->User->check_data_by_registerseller($cat_id,$city);
+    }
+    else
+    {
+     $getdata = $this->User->check_data_by_registerseller1($sub_cat_id,$city);
+    }
+    if($sub_cat_id=='' or $sub_cat_id=='0')
+    {
+    $getdata1 = $this->User->check_data_by_registerseller2($cat_id,$city);
+    }
+    else
+    {
+     $getdata1 = $this->User->check_data_by_registerseller3($sub_cat_id,$city);
+    }
+    if($sub_cat_id=='' or $sub_cat_id=='0')
+    {
+    $getdata_temp = $this->User->check_data_by_registerseller_temp_fix($cat_id,$city);
+    }
+    else
+    {
+     $getdata_temp = $this->User->check_data_by_registerseller1_temp_fix($sub_cat_id,$city);
+    }
+    if($sub_cat_id=='' or $sub_cat_id=='0')
+    {
+    $getdata_seasonal = $this->User->check_data_by_registerseller_seasonal_fix($cat_id,$city);
+    }
+    else
+    {
+     $getdata_seasonal = $this->User->check_data_by_registerseller1_seasonal_fix($sub_cat_id,$city);
+    }
+    if($sub_cat_id=='' or $sub_cat_id=='0')
+    {
+    $getdata_temp_moving = $this->User->check_data_by_registerseller_temp_moving($cat_id,$city);
+    }
+    else
+    {
+     $getdata_temp_moving = $this->User->check_data_by_registerseller1_temp_moving($sub_cat_id,$city);
+    }
+    if($sub_cat_id=='' or $sub_cat_id=='0')
+    {
+    $getdata_seasonal_moving = $this->User->check_data_by_registerseller_seasonal_moving($cat_id,$city);
+    }
+   else
+   {
+     $getdata_seasonal_moving = $this->User->check_data_by_registerseller1_seasonal_moving($sub_cat_id,$city);
+   }
+   if(!empty($getdata))
+   {
+    foreach ($getdata as $row)
+    {
+      $userType=$row['user_type'];
+      $rad = M_PI / 180;
+     //Calculate distance from latitude and longitude
+     $theta = $longitudeFrom - $row['shop_longitude'];
+     $dist = sin($latitudeFrom * $rad) 
+             * sin($row['shop_latitude'] * $rad) +  cos($latitudeFrom * $rad)
+             * cos($row['shop_latitude'] * $rad) * cos($theta * $rad);
+
+     $distance= acos($dist) / $rad * 60 *  2.250;
+      if($distance<=$radius)
+     {
+      require APPPATH . 'firebase.php';
+      require APPPATH . 'push.php';
+      require APPPATH . 'config.php';
+      $firebase = new Firebase();
+      $push = new Push();
+      // optional payload
+      $payload = array();
+      $payload['team'] = 'India';
+      $payload['score'] = '5.6';
+      // notification title
+      $title ='Hawkers';
+      // notification message
+      $message ='We have found hawker near by you';
+      // push type - single user / topic
+      $push_type = 'individual';
+      $push->setTitle($title);
+      $push->setMessage($message);
+      $push->setIsBackground(FALSE);
+      $push->setPayload($payload);
+      $json = '';
+      $response = '';
+      if ($push_type == 'topic') {
+      $json = $push->getPush();
+      $response = $firebase->sendToTopic('global', $json);
+      } else if ($push_type == 'individual') {
+      $json = $push->getPush();
+      $regId =$notification_id;
+      $data2 = $firebase->send($regId, $json);
+      date_default_timezone_set('Asia/kolkata'); 
+      $now = date('Y-m-d H:i:s');
+      $data->cus_id = $cus_id;
+      $data->latitude = $latitudeFrom;
+      $data->longitude = $longitudeFrom;
+      $data->notification_id = $notification_id;
+      $data->cat_id = $cat_id;
+      $data->sub_cat_id = $sub_cat_id;
+      $data->super_sub_cat_id = $super_sub_cat_id;
+      $data->radius = $radius;
+      $data->city = $city;
+      $data->status = $status;
+      $data->date_time = $date_time;
+      $data->set_time = $set_time;
+      $data1->cus_id = $cus_id;
+      $data1->notification_id = $notification_id;
+      $data1->title = $title;
+      $data1->message = $message;
+      $data1->date_time = $now;
+      $data1->status = '1';
+      $notifiedbycustomer = $this->User->notifiedcustomerdata($data1);
+
+      $notifiedbackupdata = $this->User->backup_notified_data($data);
+
+      $removenotifieddata = $this->User->remove_notified_data($cus_id,$notification_id,$cat_id,$sub_cat_id,$super_sub_cat_id);
+      echo '1';
+     }
+    }
+    else
+    {
+      echo '2';
+    }
+    
+    }
+   }
+    else if(!empty($getdata_temp))
+    {
+       foreach ($getdata_temp as $row_temp)
+    {
+      $rad = M_PI / 180;
+     //Calculate distance from latitude and longitude
+     $theta = $longitudeFrom - $row_temp['shop_longitude'];
+     $dist = sin($latitudeFrom * $rad) 
+             * sin($row_temp['shop_latitude'] * $rad) +  cos($latitudeFrom * $rad)
+             * cos($row_temp['shop_latitude'] * $rad) * cos($theta * $rad);
+     $distance= acos($dist) / $rad * 60 *  2.250;
+     if($distance<=$radius)
+     {
+      require APPPATH . 'firebase.php';
+      require APPPATH . 'push.php';
+      require APPPATH . 'config.php';
+      $firebase = new Firebase();
+      $push = new Push();
+      // optional payload
+      $payload = array();
+      $payload['team'] = 'India';
+      $payload['score'] = '5.6';
+      // notification title
+      $title ='Hawkers';
+      // notification message
+      $message ='We have found hawker near by you';
+      // push type - single user / topic
+      $push_type = 'individual';
+      $push->setTitle($title);
+      $push->setMessage($message);
+      $push->setIsBackground(FALSE);
+      $push->setPayload($payload);
+      $json = '';
+      $response = '';
+      if ($push_type == 'topic') {
+      $json = $push->getPush();
+      $response = $firebase->sendToTopic('global', $json);
+      } else if ($push_type == 'individual') {
+      $json = $push->getPush();
+      $regId =$notification_id;
+      $data2 = $firebase->send($regId, $json);
+      date_default_timezone_set('Asia/kolkata'); 
+      $now = date('Y-m-d H:i:s');
+      $data->cus_id = $cus_id;
+      $data->latitude = $latitudeFrom;
+      $data->longitude = $longitudeFrom;
+      $data->notification_id = $notification_id;
+      $data->cat_id = $cat_id;
+      $data->sub_cat_id = $sub_cat_id;
+      $data->super_sub_cat_id = $super_sub_cat_id;
+      $data->radius = $radius;
+      $data->city = $city;
+      $data->status = $status;
+      $data->date_time = $date_time;
+      $data->set_time = $set_time;
+      $data1->cus_id = $cus_id;
+      $data1->notification_id = $notification_id;
+      $data1->title = $title;
+      $data1->message = $message;
+      $data1->date_time = $now;
+      $data1->status = '1';
+      $notifiedbycustomer = $this->User->notifiedcustomerdata($data1);
+
+      $notifiedbackupdata = $this->User->backup_notified_data($data);
+
+      $removenotifieddata = $this->User->remove_notified_data($cus_id,$notification_id,$cat_id,$sub_cat_id,$super_sub_cat_id);
+      echo '1';
+      }
+     }
+    else
+    {
+      echo '2';
+    }
+    }
+   } 
+   else if(!empty($getdata_seasonal))
+    {
+       foreach ($getdata_seasonal as $row_seasonal)
+    {
+      $rad = M_PI / 180;
+     //Calculate distance from latitude and longitude
+     $theta = $longitudeFrom - $row_seasonal['shop_longitude'];
+     $dist = sin($latitudeFrom * $rad) 
+             * sin($row_seasonal['shop_latitude'] * $rad) +  cos($latitudeFrom * $rad)
+             * cos($row_seasonal['shop_latitude'] * $rad) * cos($theta * $rad);
+
+     $distance= acos($dist) / $rad * 60 *  2.250;
+     if($distance<=$radius)
+     {
+      require APPPATH . 'firebase.php';
+      require APPPATH . 'push.php';
+      require APPPATH . 'config.php';
+      $firebase = new Firebase();
+      $push = new Push();
+      // optional payload
+      $payload = array();
+      $payload['team'] = 'India';
+      $payload['score'] = '5.6';
+      // notification title
+      $title ='Hawkers';
+      // notification message
+      $message ='We have found hawker near by you';
+      // push type - single user / topic
+      $push_type = 'individual';
+      $push->setTitle($title);
+      $push->setMessage($message);
+      $push->setIsBackground(FALSE);
+      $push->setPayload($payload);
+      $json = '';
+      $response = '';
+      if ($push_type == 'topic') {
+      $json = $push->getPush();
+      $response = $firebase->sendToTopic('global', $json);
+      } else if ($push_type == 'individual') {
+      $json = $push->getPush();
+      $regId =$notification_id;
+      $data2 = $firebase->send($regId, $json);
+      date_default_timezone_set('Asia/kolkata'); 
+      $now = date('Y-m-d H:i:s');
+      $data->cus_id = $cus_id;
+      $data->latitude = $latitudeFrom;
+      $data->longitude = $longitudeFrom;
+      $data->notification_id = $notification_id;
+      $data->cat_id = $cat_id;
+      $data->sub_cat_id = $sub_cat_id;
+      $data->super_sub_cat_id = $super_sub_cat_id;
+      $data->radius = $radius;
+      $data->city = $city;
+      $data->status = $status;
+      $data->date_time = $date_time;
+      $data->set_time = $set_time;
+      $data1->cus_id = $cus_id;
+      $data1->notification_id = $notification_id;
+      $data1->title = $title;
+      $data1->message = $message;
+      $data1->date_time = $now;
+      $data1->status = '1';
+      $notifiedbycustomer = $this->User->notifiedcustomerdata($data1);
+
+      $notifiedbackupdata = $this->User->backup_notified_data($data);
+
+      $removenotifieddata = $this->User->remove_notified_data($cus_id,$notification_id,$cat_id,$sub_cat_id,$super_sub_cat_id);
+      echo '1';
+     }
+    }
+    else
+    {
+      echo '2';
+    }
+    }
+    }
+    if(!empty($getdata1))
+    {
+     foreach ($getdata1 as $row1)
+    {
+     $hawker_code=$row1['hawker_code'];
+     $getdevicedata = $this->User->get_device_data($hawker_code);
+     foreach ($getdevicedata as $getdevice)
+    {
+      $gps_id=$getdevice['device_id'];
+      $getdata2 = $this->User->check_data_by_location($gps_id);
+      foreach ($getdata2 as $row2)
+      {
+      $userType=$row1['user_type'];
+      if($userType=='Moving')
+    {
+      $rad = M_PI / 180;
+     //Calculate distance from latitude and longitude
+     $theta = $longitudeFrom - $row2['longitude'];
+     $dist = sin($latitudeFrom * $rad) 
+             * sin($row2['latitude'] * $rad) +  cos($latitudeFrom * $rad)
+             * cos($row2['latitude'] * $rad) * cos($theta * $rad);
+
+     $distance= acos($dist) / $rad * 60 *  2.250;
+     if($distance<$radius)
+     {
+      require APPPATH . 'firebase.php';
+      require APPPATH . 'push.php';
+      require APPPATH . 'config.php';
+      $firebase = new Firebase();
+      $push = new Push();
+      // optional payload
+      $payload = array();
+      $payload['team'] = 'India';
+      $payload['score'] = '5.6';
+      // notification title
+      $title ='Hawkers';
+      // notification message
+      $message ='We have found hawker near by you';
+      // push type - single user / topic
+      $push_type = 'individual';
+      $push->setTitle($title);
+      $push->setMessage($message);
+      $push->setIsBackground(FALSE);
+      $push->setPayload($payload);
+      $json = '';
+      $response = '';
+      if ($push_type == 'topic') {
+      $json = $push->getPush();
+      $response = $firebase->sendToTopic('global', $json);
+      } else if ($push_type == 'individual') {
+      $json = $push->getPush();
+      $regId =$notification_id;
+      $data2 = $firebase->send($regId, $json);
+      date_default_timezone_set('Asia/kolkata'); 
+      $now = date('Y-m-d H:i:s');
+      $data->cus_id = $cus_id;
+      $data->latitude = $latitudeFrom;
+      $data->longitude = $longitudeFrom;
+      $data->notification_id = $notification_id;
+      $data->cat_id = $cat_id;
+      $data->sub_cat_id = $sub_cat_id;
+      $data->super_sub_cat_id = $super_sub_cat_id;
+      $data->radius = $radius;
+      $data->city = $city;
+      $data->status = $status;
+      $data->date_time = $date_time;
+      $data->set_time = $set_time;
+      $data1->cus_id = $cus_id;
+      $data1->notification_id = $notification_id;
+      $data1->title = $title;
+      $data1->message = $message;
+      $data1->date_time = $now;
+      $data1->status = '1';
+      $notifiedbycustomer = $this->User->notifiedcustomerdata($data1);
+
+      $notifiedbackupdata = $this->User->backup_notified_data($data);
+
+      $removenotifieddata = $this->User->remove_notified_data($cus_id,$notification_id,$cat_id,$sub_cat_id,$super_sub_cat_id);
+      echo '1';
+       }
+      }
+      else
+      {
+        echo '2';
+      }
+     }
+    }
+    }
+   }
+   }
+    else if(!empty($getdata_temp_moving))
+    {
+     foreach ($getdata_temp_moving as $row_temp_moving)
+    {
+    $hawker_code=$row_temp_moving['hawker_code'];
+    $getdevicedata = $this->Customer->get_device_data($hawker_code);
+    foreach ($getdevicedata as $getdevice)
+    {
+    $gps_id=$getdevice['device_id'];
+    $getdata2 = $this->User->check_data_by_location($gps_id);
+    foreach ($getdata2 as $row2)
+    {
+      $rad = M_PI / 180;
+     //Calculate distance from latitude and longitude
+     $theta = $longitudeFrom - $row2['longitude'];
+     $dist = sin($latitudeFrom * $rad) 
+             * sin($row2['latitude'] * $rad) +  cos($latitudeFrom * $rad)
+             * cos($row2['latitude'] * $rad) * cos($theta * $rad);
+
+     $distance= acos($dist) / $rad * 60 *  2.250;
+      if($distance<$radius)
+    {
+      require APPPATH . 'firebase.php';
+      require APPPATH . 'push.php';
+      require APPPATH . 'config.php';
+      $firebase = new Firebase();
+      $push = new Push();
+      // optional payload
+      $payload = array();
+      $payload['team'] = 'India';
+      $payload['score'] = '5.6';
+      // notification title
+      $title ='Hawkers';
+      // notification message
+      $message ='We have found hawker near by you';
+      // push type - single user / topic
+      $push_type = 'individual';
+      $push->setTitle($title);
+      $push->setMessage($message);
+      $push->setIsBackground(FALSE);
+      $push->setPayload($payload);
+      $json = '';
+      $response = '';
+      if ($push_type == 'topic') {
+      $json = $push->getPush();
+      $response = $firebase->sendToTopic('global', $json);
+      } else if ($push_type == 'individual') {
+      $json = $push->getPush();
+      $regId =$notification_id;
+      $data2 = $firebase->send($regId, $json);
+      date_default_timezone_set('Asia/kolkata'); 
+      $now = date('Y-m-d H:i:s');
+      $data->cus_id = $cus_id;
+      $data->latitude = $latitudeFrom;
+      $data->longitude = $longitudeFrom;
+      $data->notification_id = $notification_id;
+      $data->cat_id = $cat_id;
+      $data->sub_cat_id = $sub_cat_id;
+      $data->super_sub_cat_id = $super_sub_cat_id;
+      $data->radius = $radius;
+      $data->city = $city;
+      $data->status = $status;
+      $data->date_time = $date_time;
+      $data->set_time = $set_time;
+      $data1->cus_id = $cus_id;
+      $data1->notification_id = $notification_id;
+      $data1->title = $title;
+      $data1->message = $message;
+      $data1->date_time = $now;
+      $data1->status = '1';
+      $notifiedbycustomer = $this->User->notifiedcustomerdata($data1);
+
+      $notifiedbackupdata = $this->User->backup_notified_data($data);
+
+      $removenotifieddata = $this->User->remove_notified_data($cus_id,$notification_id,$cat_id,$sub_cat_id,$super_sub_cat_id);
+      echo '1';
+     }
+     }
+      else
+      {
+      echo '2';
+      }
+      }
+     }
+     }
+    }
+    else if(!empty($getdata_seasonal_moving))
+    {
+     foreach ($getdata_seasonal_moving as $row_seasonal_moving)
+    {
+    $hawker_code=$row_seasonal_moving['hawker_code'];
+    $getdevicedata = $this->User->get_device_data($hawker_code);
+    foreach ($getdevicedata as $getdevice)
+    {
+    $gps_id=$getdevice['device_id'];
+    $getdata2 = $this->User->check_data_by_location($gps_id);
+    foreach ($getdata2 as $row2)
+    {
+      $rad = M_PI / 180;
+     //Calculate distance from latitude and longitude
+     $theta = $longitudeFrom - $row2['longitude'];
+     $dist = sin($latitudeFrom * $rad) 
+             * sin($row2['latitude'] * $rad) +  cos($latitudeFrom * $rad)
+             * cos($row2['latitude'] * $rad) * cos($theta * $rad);
+
+     $distance= acos($dist) / $rad * 60 *  2.250;
+      if($distance<$radius)
+     {
+      require APPPATH . 'firebase.php';
+      require APPPATH . 'push.php';
+      require APPPATH . 'config.php';
+      $firebase = new Firebase();
+      $push = new Push();
+      // optional payload
+      $payload = array();
+      $payload['team'] = 'India';
+      $payload['score'] = '5.6';
+      // notification title
+      $title ='Hawkers';
+      // notification message
+      $message ='We have found hawker near by you';
+      // push type - single user / topic
+      $push_type = 'individual';
+      $push->setTitle($title);
+      $push->setMessage($message);
+      $push->setIsBackground(FALSE);
+      $push->setPayload($payload);
+      $json = '';
+      $response = '';
+      if ($push_type == 'topic') {
+      $json = $push->getPush();
+      $response = $firebase->sendToTopic('global', $json);
+      } else if ($push_type == 'individual') {
+      $json = $push->getPush();
+      $regId =$notification_id;
+      $data2 = $firebase->send($regId, $json);
+      date_default_timezone_set('Asia/kolkata'); 
+      $now = date('Y-m-d H:i:s');
+      $data->cus_id = $cus_id;
+      $data->latitude = $latitudeFrom;
+      $data->longitude = $longitudeFrom;
+      $data->notification_id = $notification_id;
+      $data->cat_id = $cat_id;
+      $data->sub_cat_id = $sub_cat_id;
+      $data->super_sub_cat_id = $super_sub_cat_id;
+      $data->radius = $radius;
+      $data->city = $city;
+      $data->status = $status;
+      $data->date_time = $date_time;
+      $data->set_time = $set_time;
+      $data1->cus_id = $cus_id;
+      $data1->notification_id = $notification_id;
+      $data1->title = $title;
+      $data1->message = $message;
+      $data1->date_time = $now;
+      $data1->status = '1';
+      $notifiedbycustomer = $this->User->notifiedcustomerdata($data1);
+
+      $notifiedbackupdata = $this->User->backup_notified_data($data);
+
+      $removenotifieddata = $this->User->remove_notified_data($cus_id,$notification_id,$cat_id,$sub_cat_id,$super_sub_cat_id);
+      echo '1';
+      }
+     }
+      else
+      {
+      echo '2';
+      }
+      }
+     }
+     }
+    }
+   }
+   }
+    else
+    {
+       echo '0';
+    } 
+    }
+  //////////////////////////////////  Cron job ///////////////////////////////
     public function send_notification_by_staff()
    {
 

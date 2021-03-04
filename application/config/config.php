@@ -525,13 +525,8 @@ $config['rewrite_short_tags'] = FALSE;
 */
 $config['proxy_ips'] = '';
 
-$config['working_key'] = '4D60159C18BA1BFA6EBFC6F10734C27F';
+$config['working_key'] = 'E82CD84F734C60375ADB29DD1A8E869B';
 
-$config['access_code'] = 'AVKD02IB69BF74DKFB';
+$config['access_code'] = 'AVDT03IC86AH57TDHA';
 
-$config['merchant_id'] = 'AVKD02IB69BF74DKFB';
-
-
-$config['FIREBASE_API_KEY'] = 'AAAAC8MmYu0:APA91bHFN2Lb4Pt_J8AGic3S6AFr_ukpjkbR_XxxH3VEuQI-CGcFQtYR1ub5l5iKPA3eCw_L9URc5_UuAApAamKPX7qoWGfkwHTDcqhLAop7aM-q-ULRqNyf00ICpmrlAu8pN3IwvAE1';
-
-
+$config['merchant_id'] = '260716';

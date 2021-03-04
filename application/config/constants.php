@@ -64,7 +64,7 @@ $tables=array(
 				'table29'=>'working_hours',
 				'table30'=>'tbl_sub_order_detail_for_restaurant',
 				'table31'=>'master_item',
-                'table32'=>'sub_master_item'
+                                'table32'=>'sub_master_item'
 
 			);
 define('TABLES', json_encode($tables));

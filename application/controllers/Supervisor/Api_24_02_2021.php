@@ -699,7 +699,7 @@ if(!empty($detail_for_restaurant))
  $data2->name =$name;
  if(!empty($image))
  {
-   $data2->image = base64_encode(file_get_contents(base_url().'uploads/'.$image));
+   $data2->image =base_url().'uploads/'.$image;
  }else
  {
    $data2->image='';
@@ -998,40 +998,32 @@ public function menu_list_data_post()
   {
    foreach ($menu_list as $row)
    {
-      $gst       =$this->Supervisor->getGst($row['menu_category_id'],$admin_id);
-
      $menuhalfprice=$row['menu_half_price'];
      if(!empty($menuhalfprice))
      {
       $menu_half_price=$row['menu_half_price'];
-       $menu_half_price_gst =($menu_half_price)*$gst/100;
     }
     else
     {
       $menu_half_price='';
-      $menu_half_price_gst='';
     }
     $menufullprice=$row['menu_full_price'];
     if(!empty($menufullprice))
     {
       $menu_full_price=$row['menu_full_price'];
-      $menu_full_price_gst =($menu_full_price)*$gst/100;
     }
     else
     {
       $menu_full_price='';
-      $menu_full_price_gst ='';
     }
     $menufixprice=$row['menu_fix_price'];
     if(!empty($menufixprice))
     {
       $menu_fix_price=$row['menu_fix_price'];
-      $menu_fix_price_gst =($menu_fix_price)*$gst/100;
     }
     else
     {
       $menu_fix_price='';
-      $menu_fix_price_gst='';
     }
     $nutrientcounts=$row['nutrient_counts'];
     if(!empty($nutrientcounts))
@@ -1046,18 +1038,12 @@ public function menu_list_data_post()
     $data['admin_id'] =   $row['admin_id'];
     $data['menu_food_type'] =   $row['menu_food_type'];
     $data['menu_name'] =   $row['menu_name'];
-    $data['menu_image'] = base64_encode(file_get_contents(base_url().'uploads/'.$row['menu_image']));
-    // $data['menu_image'] = base_url().'uploads/'.$row['menu_image'];
-    
+    $data['menu_image'] =   base_url().'uploads/'.$row['menu_image'];
     $data['menu_detail'] =   $row['menu_detail'];
     $data['menu_half_price'] =   $menu_half_price;
     $data['menu_full_price'] =  $menu_full_price;
     $data['menu_fix_price'] =   $menu_fix_price;
     $data['nutrient_counts'] =   $nutrient_counts;
-    $data['gst'] =  "$gst";
-    $data['menu_half_price_gst'] = "$menu_half_price_gst";
-    $data['menu_full_price_gst'] = "$menu_full_price_gst";
-    $data['menu_fix_price_gst'] =  "$menu_fix_price_gst";
     $data['message'] = 'Success';
     $data['status']  ='1';
 
@@ -1132,11 +1118,11 @@ public function add_order_detail_waiter_for_restaurant_post()
   else
   {
     $result = $this->Supervisor->add_order_detail_for_waiter($data);
-    if($result <= 9)
+    if($result < 9)
     {
       $alphanumerric='00'.$result;
 
-    }else if($result >= '9' && $result <= '99')
+    }else if($result > '9' && $result < '99')
     {
       $alphanumerric='0'.$result;
     }else
@@ -1160,7 +1146,7 @@ public function add_order_detail_waiter_for_restaurant_post()
         $insert_array[]=array(
           'menu_item_name'=>$menu_item_array[$i],
           'quantity'=>$quantity[$i],
-          'half_and_full_status'=>$half_and_full_status[$i]=='FF'?'F':$half_and_full_status[$i],
+          'half_and_full_status'=>$half_and_full_status[$i],
           'menu_price'=>$menu_price[$i],
           'order_id'=>$alphanumerric,
           'status'=>'1',
@@ -1219,11 +1205,11 @@ public function change_order_for_particular_customer_post()
   $now1 = date('Y-m-d');
   $data->order_id=$order_id;
   $data->admin_id=$admin_id;
-  if($max_id <='9')
+  if($max_id < '9')
   {
     $data->sub_order_id='00'.($max_id+1);
     $sub_order_id='00'.($max_id+1);
-  }else if($max_id <= '99' && $max_id >= 9)
+  }else if($max_id < '99' && $max_id > 9)
   {
     $data->sub_order_id='0'.($max_id+1);
     $sub_order_id='0'.($max_id+1);
@@ -1264,7 +1250,7 @@ public function change_order_for_particular_customer_post()
       $insert_array[]=array(
         'menu_item_name'=>$menu_item_array[$i],
         'quantity'=>$quantity[$i],
-        'half_and_full_status'=>$half_and_full_status[$i]=='FF'?'F':$half_and_full_status[$i],
+        'half_and_full_status'=>$half_and_full_status[$i],
         'menu_price'=>$menu_price[$i],
         'sub_order_id'=>$sub_order_id,
         'order_id'=>$order_id,
@@ -1308,15 +1294,6 @@ public function get_order_detail_for_restaurant_post()
   $order_status=$this->input->post('order_status');
   $mobile_no=$this->input->post('mobile_no');
   $table_no=ltrim($this->input->post('table_no'),'0');
-
-  // $loggedResult=$this->Supervisor->checkLogedinUser($mobile_no,$admin_id);
-  // if(!empty($loggedResult))
-  // {
-  //    $response->active_status = 1;
-  // }else
-  // {
-  //    $response->active_status = 0;
-  // }
 
   if(!empty($mobile_no))
   {
@@ -2568,12 +2545,11 @@ public function deleteItemForOrder_post()
 
           $orderItemResult    =$this->Supervisor->getOrderItemPrice($order_id,$admin_id,$id);
           $menu_price         =$orderItemResult[0]['menu_price'];
-          $quantity           =$orderItemResult[0]['quantity'];
           $actualPrice        =$total_price-$menu_price;
           $actualNetPay       =$actualPrice+$actualPrice*$gst_amount/100;
           $actualGstAmountPrice =$actualPrice*$gst_amount/100;
           $updateArray        =array(
-            'total_item'=>$total_item-$quantity,
+            'total_item'=>$total_item-1,
             'total_price'=>$actualPrice,
             'net_pay_amount'=>$actualNetPay,     
             'gst_amount_price'=>$actualGstAmountPrice
@@ -2638,7 +2614,6 @@ public function deleteItemForSubOrder_post()
           
           if(!empty($result2))
           {
-	      $result=$this->Supervisor->cancelSubOrderItem($order_id,$admin_id,$item_name,$sub_order_id,$id);
 
               $CheckItem=$this->Supervisor->checkSubOrderItem($order_id,$admin_id,$sub_order_id);
 
@@ -2646,7 +2621,7 @@ public function deleteItemForSubOrder_post()
               {
                 $this->Supervisor->RejectSubOrder($order_id,$admin_id,$sub_order_id,$mobile_no,$id);
               }
-              
+              $result=$this->Supervisor->cancelSubOrderItem($order_id,$admin_id,$item_name,$sub_order_id,$id);
 
               if(!empty($result))
               {
@@ -2660,12 +2635,11 @@ public function deleteItemForSubOrder_post()
 
                     $orderItemResult    =$this->Supervisor->getSubOrderItemPrice($order_id,$admin_id,$id,$sub_order_id);
                     $menu_price         =$orderItemResult[0]['menu_price'];
-                     $quantity          =$orderItemResult[0]['quantity'];
                     $actualPrice        =$total_price-$menu_price;
                     $actualNetPay       =$actualPrice+$actualPrice*$gst_amount/100;
                     $actualGstAmountPrice =$actualPrice*$gst_amount/100;
                     $updateArray        =array(
-                      'total_item'=>$total_item-$quantity,
+                      'total_item'=>$total_item-1,
                       'total_price'=>$actualPrice,
                       'net_pay_amount'=>$actualNetPay,     
                       'gst_amount_price'=>$actualGstAmountPrice
@@ -2910,5 +2884,4 @@ public function discountForCustomer_post()
 }
 echo json_output($response);
 }
-
 }

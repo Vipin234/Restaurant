@@ -112,21 +112,13 @@ class Customer extends CI_Model
     }
     function getGroupDatas($order_id)
     {
-
        $data = $this->db->query("SELECT tbl_order_detail_for_restaurant.*,`spots`.`name` as RestaurentName from tbl_order_detail_for_restaurant INNER JOIN spots ON tbl_order_detail_for_restaurant.admin_id = spots.admin_id where order_id='$order_id'  group by order_id  ORDER BY id DESC");     
         return($data->result_array());
     }
-    function getDataOrderWises($orderid,$admin_id)
+    function getDataOrderWises($orderid)
     {
-     
-     $this->db->select('*');
-     $this->db->from(json_decode(TABLES)->table31);
-     $this->db->where('order_id',$orderid);
-     $this->db->where('admin_id',$admin_id);
-     $query=$this->db->get();
-     // print_r($this->db->last_query());exit;
-     $result=$query->result_array();
-     return $result;
+     $result = $this->db->select('tbl_order_detail_for_restaurant.*,spots.name as RestaurentName')->from("tbl_order_detail_for_restaurant")->join("spots","spots.admin_id=tbl_order_detail_for_restaurant.admin_id")->where(['order_id'=>$orderid])->get()->result_array();
+        return $result;
 
     }
 
@@ -147,8 +139,6 @@ class Customer extends CI_Model
 
     function update_customer_profile($data)
     { 
-
-
       $cus_id=$data->cus_id;  
       $name =$data->name;
       $state =$data ->state;
@@ -162,71 +152,10 @@ class Customer extends CI_Model
       $email_id=$data->email;
       $cus_image =$data ->cus_image;
       $active_status='1';
-      $profile_update_status=1;
-      
       date_default_timezone_set('Asia/kolkata'); 
-
       $now = date('Y-m-d H:i:s');
 
-      $string="UPDATE tbl_registration_customer SET ";
-
-      if(isset($name)&&!empty($name))
-      {
-        $string.='name="'.$name.'"'.',';
-      }
-      if(isset($state)&&!empty($state))
-      {
-        $string.='state="'.$state.'"'.',';
-      }
-      if(isset($city)&&!empty($city))
-      {
-        $string.='city="'.$city.'"'.',';
-      }
-      if(isset($address)&&!empty($address))
-      {
-        $string.='address="'.$address.'"'.',';
-      }
-      if(isset($area)&&!empty($area))
-      {
-        $string.='area="'.$area.'"'.',';
-      }
-      if(isset($gender)&&!empty($gender))
-      {
-        $string.='gender="'.$gender.'"'.',';
-      }
-      if(isset($date_of_birth)&&!empty($date_of_birth))
-      {
-        $string.='date_of_birth="'.$date_of_birth.'"'.',';
-      }
-      if(isset($pincode)&&!empty($pincode))
-      {
-        $string.='pincode="'.$pincode.'"'.',';
-      }
-      if(isset($mobile_no)&&!empty($mobile_no))
-      {
-        $string.='mobile_no="'.$mobile_no.'"'.',';
-      }
-      if(isset($email_id)&&!empty($email_id))
-      {
-        $string.='email_id="'.$email_id.'"'.',';
-      }
-      if(isset($cus_image)&&!empty($cus_image))
-      {
-        $string.='cus_image="'.$cus_image.'"'.',';
-      }
-      if(isset($active_status)&&!empty($active_status))
-      {
-        $string.='active_status="'.$active_status.'"'.',';
-      }
-        $string.='modified_date="'.$now.'"'.',';
-
-        $string.='profile_update_status="'.$profile_update_status.'"';
-
-        $string.='where cus_id="'.$cus_id.'" and mobile_no="'.$mobile_no.'"';
-
-        // print_r($string);exit;
-
-        $this->db->query($string);
+      $this->db->query("UPDATE tbl_registration_customer SET name='$name',state='$state',city='$city',address='$address',area='$area',gender='$gender',date_of_birth='$date_of_birth',pincode='$pincode',mobile_no='$mobile_no',email_id='$email_id',cus_image='$cus_image',active_status='$active_status', modified_date='$now',profile_update_status='1' where cus_id='$cus_id' and mobile_no='$mobile_no'");
 
     }
 
@@ -540,7 +469,7 @@ public function getCustId($order_id,$admin_id,$customer_mobile_no)
             $this->db->from($json_decode->table31);
             $this->db->where('admin_id',$admin_id);
             $this->db->where('order_id',$order_id);
-            // $this->db->where('status','1');
+            $this->db->where('status','1');
             $query=$this->db->get();
             // print_r($this->db->last_query());exit;
             $result=$query->result_array();
@@ -568,58 +497,11 @@ public function getCustId($order_id,$admin_id,$customer_mobile_no)
             $this->db->where('admin_id',$admin_id);
             $this->db->where('order_id',$order_id);
             $this->db->where('sub_order_id',$sub_order_id);
-            //$this->db->where('status','1');
+            $this->db->where('status','1');
             $query=$this->db->get();
             //print_r($this->db->last_query());exit;
             $result=$query->result_array();
             return $result;
-      }
-      public function getOrderCalculation($orderid,$admin_id)
-      {
-        $this->db->select('SUM(quantity) as quantity,SUM(menu_price) AS menu_price');
-        $this->db->from(json_decode(TABLES)->table31);
-        $this->db->where('order_id',$orderid);
-        $this->db->where('admin_id',$admin_id);
-        $this->db->where('status','1');
-        $query=$this->db->get();
-        $result=$query->result_array();
-        return $result;
-
-      }
-      public function getSubOrderCalculation($orderid,$admin_id,$sub_order_id)
-      {
-        $this->db->select('SUM(quantity) as quantity,SUM(menu_price) AS menu_price');
-        $this->db->from(json_decode(TABLES)->table32);
-        $this->db->where('order_id',$orderid);
-        $this->db->where('sub_order_id',$sub_order_id);
-        $this->db->where('admin_id',$admin_id);
-        $this->db->where('status','1');
-        $query=$this->db->get();
-        $result=$query->result_array();
-        return $result;
-
-      }
-      public function getSubOrderMenuItems($orderid,$sub_order_id,$admin_id)
-      {
-           $this->db->select('*');
-           $this->db->from(json_decode(TABLES)->table32);
-           $this->db->where('order_id',$order_id);
-           $this->db->where('sub_order_id',$sub_order_id);
-           $this->db->where('admin_id',$admin_id);
-           $query=$this->db->get();
-           $result=$query->result_array();
-           return $result;
-      }
-      public function getGst($id,$admin_id)
-      {
-        $this->db->select('gst');
-        $this->db->from('master_item_category');
-        $this->db->where('id',$id);
-        $this->db->where('status','1');
-        $this->db->where('admin_id',$admin_id);
-        $query=$this->db->get();
-        $result=$query->result_array();
-        return $result[0]['gst'];
       }
    }
 ?>

@@ -42,11 +42,10 @@ class Firebase {
         // Set POST variables
         $url = 'https://fcm.googleapis.com/fcm/send';
  
-         $headers = array(
-            'Authorization: key=' . 'AAAAC8MmYu0:APA91bHFN2Lb4Pt_J8AGic3S6AFr_ukpjkbR_XxxH3VEuQI-CGcFQtYR1ub5l5iKPA3eCw_L9URc5_UuAApAamKPX7qoWGfkwHTDcqhLAop7aM-q-ULRqNyf00ICpmrlAu8pN3IwvAE1',
+    $headers = array(
+        'Authorization: key=' . 'AAAAC8MmYu0:APA91bHFN2Lb4Pt_J8AGic3S6AFr_ukpjkbR_XxxH3VEuQI-CGcFQtYR1ub5l5iKPA3eCw_L9URc5_UuAApAamKPX7qoWGfkwHTDcqhLAop7aM-q-ULRqNyf00ICpmrlAu8pN3IwvAE1',
             'Content-Type: application/json'
         );
-
         // Open connection
         $ch = curl_init();
  

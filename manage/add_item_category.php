@@ -7,12 +7,34 @@ $adminid  = $_SESSION['adminid'];
 $userrole = $_SESSION['userrole'];
 $username = $_SESSION['username'];
 $usertype = $_SESSION['usertype'];
-//echo $usertype;exit;
 if($adminid == '')
 {
   header("location:login.php");
 }
+date_default_timezone_set('Asia/Kolkata'); 
+if(isset($_POST['create'])){
+$item_category    =$_POST['item_category'];
+$gst              =$_POST['gst'];
+if(!empty($item_category) && !empty($gst))
+{
+  $date=date('Y-m-d H:i:s');
+  $string="insert into master_item_category (category_name,gst,creation_date,admin_id) values('$item_category','$gst','$date','$adminid')";
+  // echo $string;exit;
+  $query=mysqli_query($conn,$string);
+  // echo '<script language="javascript">';
+  // echo 'alert("message successfully sent")';
+  // echo '</script>';
+  header("location:Item_category_list.php");
+}else
+{
+  echo '<script language="javascript">';
+  echo 'alert("message successfully sent")';
+  echo '</script>';
+}
+
+}
 ?>
+
 <!DOCTYPE html>
 
   <body class="nav-md">
@@ -25,6 +47,8 @@ if($adminid == '')
             </div>
 
             <div class="clearfix"></div>
+
+
            <?php include 'sidemenu.php';?>
             <!-- /menu footer buttons -->
             <div class="sidebar-footer hidden-small">
@@ -140,84 +164,40 @@ if($adminid == '')
 
         <!-- page content -->
         <div class="right_col" role="main">
-             <!-- <?php// if($usertype == 'superadmin')
-             { $display// = "none"; }
-            // elseif($usertype == "admin")
-              { $display// = ""; }?>
-             <div class="pull-right" style="display:<?php //echo $display;?>"> -->
-             <?php $query = "SELECT * FROM spots WHERE admin_id = '$adminid'";
-//echo $query;exit;
-$runqry = mysqli_query($conn,$query);
-//echo mysqli_num_rows($runqry);exit;
-if(mysqli_num_rows($runqry)>0)
-{
-  $display = '';
-}
-else
-{
-  $display = '';
-}?>
-              <div class="pull-right" style="display: <?php echo $display;?>">
-              <input class="btn btn-primary" type="button" name="add_restaurant" value="Add Menu Items"
-                onclick="window.location.href='<?php echo "add_menu.php"; ?>';"/>
+                      <div class="clearfix"></div>
+             <form method="post" action="" enctype="multipart/form-data" id="demo-form2" data-parsley-validate class="form-horizontal form-label-left">
+                      
+                      <div class="item form-group">
+                        <label class="col-form-label col-md-3 col-sm-3 label-align" for="last-name"><b>Item Category</b> <span class="required">*</span>
+                        </label>
+                        <div class="col-md-6 col-sm-6 ">
+                          <input type="text" id="full-name" name="item_category" required="required" class="form-control" required="">
+                        </div>
+                      </div>
+                      <div class="item form-group">
+                        <label class="col-form-label col-md-3 col-sm-3 label-align" for="last-name"><b>GST</b> <span class="required">*</span>
+                        </label>
+                        <div class="col-md-6 col-sm-6 ">
+                          <input type="number" id="full-name" name="gst" required="required" class="form-control">
+                        </div>
+                      </div>
+                     
+                      <div class="ln_solid"></div>
+                      <div class="item form-group">
+                        <div class="col-md-6 col-sm-6 offset-md-3">
+                          <button class="btn btn-primary" onclick="window.location.href='<?php echo "restaurant_menu.php"; ?>';" type="button">Cancel</button>
+                            <!-- <button class="btn btn-primary" type="reset">Reset</button> -->
+                          <button type="submit" name="create" class="btn btn-success">Create</button>
+                        </div>
+                      </div>
+
+                    </form>
+
             </div>
-                 <?php $qry = "SELECT * FROM tbl_restaurant_menu_item_list WHERE admin_id = '$adminid' AND status = 1";
-                 //echo $qry;exit;
-                 $run = mysqli_query($conn,$qry);?>
-             <table id="datatable-responsive" class="table table-striped table-bordered dt-responsive nowrap" cellspacing="0" width="100%">
-                      <thead>
-                        <tr>
-                          <th>Menu Name</th>
-                          <th>Details</th>
-                          <th>Food Type</th>
-                          <th>Price Type</th>
-                           <th>GST</th>
-                          <th>Fixed Price</th>
-                         
-                          <th>Half Price / Full Price</th>
-                          <th>Image</th>
-                          <th>Create Date</th>
-                          <th>Edit/Delete</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <?php while($fetchdata = mysqli_fetch_array($run)){
+           
 
-                          $category_id=$fetchdata['menu_category_id'];
-
-                          $string="select gst from master_item_category where id='$category_id' and status=1";
-
-                          $query=mysqli_query($conn,$string);
-
-                          $fetch=mysqli_fetch_assoc($query);
-
-                          $gst=$fetch['gst'];
-
-
-                        ?>
-                        <tr>
-                          <td><?php echo $fetchdata['menu_name'];?></td>
-                          <td><?php echo $fetchdata['menu_detail'];?></td>
-                          <td><?php echo $fetchdata['menu_food_type'];?></td>
-                          <td><?php echo $fetchdata['menu_price_type'];?></td>
-                          <td><?php echo $gst;?></td>
-                          <td><?php if($fetchdata['menu_fix_price'] != ''){ echo $fetchdata['menu_fix_price'];}else{echo "Null";}?></td>
-                          <td><?php if($fetchdata['menu_half_price'] ||  $fetchdata['menu_half_price'] != ''){ echo $fetchdata['menu_half_price']."/".$fetchdata['menu_full_price'];}else{echo "Null";}?></td>
-                          
-                          <td><img src="<?php echo 'http://'.$_SERVER['SERVER_NAME'].'/Restaurant/uploads'.'/'.$fetchdata['menu_image']; ?>" height="80px" width="120px"/></td>
-                          <td><?php echo $fetchdata['create_date'];?></td>
-                           <td><a href="edit_menu.php?id=<?php echo $fetchdata['id']?>"><i class="fa fa-pencil" aria-hidden="true"></i></a><a href="delete_menu.php?id=<?php echo $fetchdata['id']?>"><i class="fa fa-trash" aria-hidden="true"></i></a> </td>
-                          
-                        </tr>
-                      <?php } ?>
-                       
-                      </tbody>
-                    </table>
-          
-     
-            </div>
-         
         <!-- /page content -->
 
         <!-- footer content -->
   <?php include 'footer.php';?>
+    

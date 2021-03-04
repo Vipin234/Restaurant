@@ -80,6 +80,13 @@
                       <li><a href="waiterlist.php">Waiters</a></li>
                     </ul> -->
                   </li>
+                   <li style="display: <?php echo $disp;?>"><a href="Item_category_list.php"><i class="fa fa-home"></i>Item Category <span class="fa fa-chevron-down"></span></a>
+                   <!--  <ul class="nav child_menu">
+                      <li><a href="cashierslist.php">Cashiers</a></li>
+                      <li><a href="cheflist.php">Chefs</a></li>
+                      <li><a href="waiterlist.php">Waiters</a></li>
+                    </ul> -->
+                  </li>
                   <!-- <li><a><i class="fa fa-edit"></i> Forms <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
                       <li><a href="form.html">General Form</a></li>

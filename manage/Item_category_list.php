@@ -1,4 +1,5 @@
 <?php
+//error_reporting(1);
 include '../config.php';
 include 'header.php';
 session_start();
@@ -11,8 +12,14 @@ $usertype = $_SESSION['usertype'];
 if($adminid == '')
 {
   header("location:login.php");
+}else
+{
+  $string="select * from master_item_category";
+  $query=mysqli_query($conn,$string);
 }
+
 ?>
+
 <!DOCTYPE html>
 
   <body class="nav-md">
@@ -25,6 +32,7 @@ if($adminid == '')
             </div>
 
             <div class="clearfix"></div>
+
            <?php include 'sidemenu.php';?>
             <!-- /menu footer buttons -->
             <div class="sidebar-footer hidden-small">
@@ -140,60 +148,42 @@ if($adminid == '')
 
         <!-- page content -->
         <div class="right_col" role="main">
-             <!-- <?php// if($usertype == 'superadmin')
-             { $display// = "none"; }
-            // elseif($usertype == "admin")
-              { $display// = ""; }?>
-             <div class="pull-right" style="display:<?php //echo $display;?>"> -->
-             <?php $query = "SELECT * FROM spots WHERE admin_id = '$adminid'";
-//echo $query;exit;
-$runqry = mysqli_query($conn,$query);
-//echo mysqli_num_rows($runqry);exit;
-if(mysqli_num_rows($runqry)>0)
-{
-  $display = '';
-}
-else
-{
-  $display = '';
-}?>
-              <div class="pull-right" style="display: <?php echo $display;?>">
-              <input class="btn btn-primary" type="button" name="add_restaurant" value="Add Menu Items"
-                onclick="window.location.href='<?php echo "add_menu.php"; ?>';"/>
+          <button id="exportButton" class="btn btn-danger clearfix"><span class="fa fa-file-excel-o"></span> Export to Excel</button>
+           <div class="pull-right" style="display:">
+              <input class="btn btn-primary" type="button" name="addsiteuser" value="Add Item Catetory" onclick="window.location.href='add_item_category.php';">
             </div>
-                 <?php $qry = "SELECT * FROM tbl_restaurant_menu_item_list WHERE admin_id = '$adminid' AND status = 1";
-                 //echo $qry;exit;
-                 $run = mysqli_query($conn,$qry);?>
              <table id="datatable-responsive" class="table table-striped table-bordered dt-responsive nowrap" cellspacing="0" width="100%">
                       <thead>
                         <tr>
-                          <th>Menu Name</th>
-                          <th>Details</th>
-                          <th>Food Type</th>
-                          <th>Price Type</th>
-                          <th>Fixed Price</th>
-                          <th>Half Price / Full Price</th>
-                          <th>Image</th>
-                          <th>Create date</th>
-                          <th>Edit/Delete</th>
+                          <th>Id</th>
+                          <th>Category</th>
+                          <th>GST</th>
+                          <th>Status</th>
                         </tr>
                       </thead>
                       <tbody>
-                        <?php while($fetchdata = mysqli_fetch_array($run)){
-                        ?>
-                        <tr>
-                          <td><?php echo $fetchdata['menu_name'];?></td>
-                          <td><?php echo $fetchdata['menu_detail'];?></td>
-                          <td><?php echo $fetchdata['menu_food_type'];?></td>
-                          <td><?php echo $fetchdata['menu_price_type'];?></td>
-                          <td><?php if($fetchdata['menu_fix_price'] != ''){ echo $fetchdata['menu_fix_price'];}else{echo "Null";}?></td>
-                          <td><?php if($fetchdata['menu_half_price'] ||  $fetchdata['menu_half_price'] != ''){ echo $fetchdata['menu_half_price']."/".$fetchdata['menu_full_price'];}else{echo "Null";}?></td>
-                          <td><img src="data:image/png;charset=utf8;base64,<?php echo base64_encode($fetchdata['menu_image']);?>" height="80px" width="120px"/></td>
-                          <td><?php echo $fetchdata['create_date'];?></td>
-                           <td><a href="edit_menu.php?id=<?php echo $fetchdata['id']?>"><i class="fa fa-pencil" aria-hidden="true"></i></a><a href="delete_menu.php?id=<?php echo $fetchdata['id']?>"><i class="fa fa-trash" aria-hidden="true"></i></a> </td>
+                       <?php
+                        $count=1;
+                        while($row=mysqli_fetch_assoc($query)){
+                          $category_name    =$row['category_name'];
+                          $gst              =$row['gst'];
+                          $status           =$row['status'];
                           
-                        </tr>
-                      <?php } ?>
+                          ?>
+                          <tr>
+                          <td><?php echo $count;?></td>
+                          <td><?php echo $category_name;?></td>
+                          <td><?php echo $gst;?></td>
+                          <td><?php echo $status=1?'Active':'Deactive';?></td>
+
+                          </tr>
+
+                       <?php 
+                       $count++;
+                      }
+
+
+                       ?>
                        
                       </tbody>
                     </table>
@@ -205,3 +195,123 @@ else
 
         <!-- footer content -->
   <?php include 'footer.php';?>
+ <script type="text/javascript">
+    jQuery(function ($) {
+        $("#exportButton").click(function () {
+            // parse the HTML table element having an id=exportTable
+            var dataSource = shield.DataSource.create({
+                data: "#datatable-responsive",
+                schema: {
+                    type: "table",
+                    fields: {
+                        FullName: { type: String },
+                        Username: { type: String },
+                        Email: { type: String },
+                        Mobile: { type: Number },
+                        Address: { type: String },
+                        Restaurant: { type: String },
+                        Staff: { type: String },
+                        Create_Date: { type: Date }
+                    }
+                }
+            });
+
+            // when parsing is done, export the data to Excel
+            dataSource.read().then(function (data) {
+                new shield.exp.OOXMLWorkbook({
+                    author: "PrepBootstrap",
+                    worksheets: [
+                        {
+                            name: "PrepBootstrap Table",
+                            rows: [
+                                {
+                                    cells: [
+                                        {
+                                            style: {
+                                                bold: true
+                                            },
+                                            type: String,
+                                            value: "Full name"
+                                        },
+                                        {
+                                            style: {
+                                                bold: true
+                                            },
+                                            type: String,
+                                            value: "Username"
+                                        },
+                                        {
+                                            style: {
+                                                bold: true
+                                            },
+                                            type: String,
+                                            value: "Email"
+                                        },
+                                                                                {
+                                            style: {
+                                                bold: true
+                                            },
+                                            type: String,
+                                            value: "Mobile"
+                                        },
+                                                                                {
+                                            style: {
+                                                bold: true
+                                            },
+                                            type: String,
+                                            value: "Current Adress"
+                                        },
+                                                                                {
+                                            style: {
+                                                bold: true
+                                            },
+                                            type: String,
+                                            value: "Restaurant Name"
+                                        },
+                                                                                {
+                                            style: {
+                                                bold: true
+                                            },
+                                            type: String,
+                                            value: "Staff Type"
+                                        },
+                                                                                {
+                                            style: {
+                                                bold: true
+                                            },
+                                            type: String,
+                                            value: "Create Date"
+                                        },
+                                    ]
+                                }
+                            ].concat($.map(data, function(item) {
+                                return {
+                                    cells: [
+                                        { type: String, value: item.FullName },
+                                        { type: String, value: item.Username },
+                                        { type: String, value: item.Email },
+                                        { type: Number, value: item.Mobile },
+                                        { type: String, value: item.Address },
+                                        { type: String, value: item.Restaurant },
+                                        { type: String, value: item.Staff },
+                                        { type: Date, value: item.Create_Date }
+                                    ]
+                                };
+                            }))
+                        }
+                    ]
+                }).saveAs({
+                    fileName: "Stafflist"
+                });
+            });
+        });
+    });
+</script>
+
+<style>
+    #exportButton {
+        border-radius: 0;
+    }
+</style>
+
+
