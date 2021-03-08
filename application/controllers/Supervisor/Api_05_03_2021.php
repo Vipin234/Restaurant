@@ -483,7 +483,6 @@ public function add_menu_item_for_restaurant_post()
   $menu_full_price=$this->input->post('menu_full_price');
   $menu_fix_price=$this->input->post('menu_fix_price');
   $nutrient_counts=$this->input->post('nutrient_counts');
-  $id=$this->input->post('id');
 
   date_default_timezone_set('Asia/kolkata'); 
   $now = date('Y-m-d H:i:s');
@@ -506,7 +505,6 @@ public function add_menu_item_for_restaurant_post()
   $data->menu_fix_price=$menu_fix_price;
   $data->nutrient_counts=$nutrient_counts;
   $data->create_date=$now;
-  $data->menu_category_id=$id;
   $data->status='1';
 
   $result = $this->Supervisor->add_menu_item_restaurant($data);
@@ -827,7 +825,6 @@ public function menu_update_post()
   $menu_full_price=$this->input->post('menu_full_price');
   $menu_fix_price=$this->input->post('menu_fix_price');
   $nutrient_counts=$this->input->post('nutrient_counts');
-  $id=$this->input->post('id');
   $t = time()."".date('Y-m-d');
   $path ='uploads/';
   $image_parts =explode(";base64,",$menu_image);
@@ -850,7 +847,6 @@ public function menu_update_post()
   $data->menu_full_price = $menu_full_price;
   $data->menu_fix_price = $menu_fix_price;
   $data->nutrient_counts = $nutrient_counts;
-  $data->menu_category_id = $id;
 
   $result1 = $this->Supervisor->update_menu_profile($data);
   if(!empty($menu_id))
@@ -1048,7 +1044,6 @@ public function menu_list_data_post()
     }
     $data['menu_id'] =   $row['menu_id'];
     $data['admin_id'] =   $row['admin_id'];
-    $data['menu_category_id'] =   $row['menu_category_id'];
     $data['menu_food_type'] =   $row['menu_food_type'];
     $data['menu_name'] =   $row['menu_name'];
     $data['menu_image'] = base64_encode(file_get_contents(base_url().'uploads/'.$row['menu_image']));
@@ -2469,7 +2464,6 @@ public function generateInvoiceOrderBycashier_post()
         $menuquantity[]             =$menuValue['quantity'];
         $menuhalf_and_full_status[] =$menuValue['half_and_full_status'];
         $menumenu_price[]           =$menuValue['menu_price'];
-        $menu_item_gst[]            =$menuValue['gst'];
         
       }
       // print_r(implode(',',$menuImages).',');exit;
@@ -2477,7 +2471,6 @@ public function generateInvoiceOrderBycashier_post()
       $arry['quantity']=implode(',',$menuquantity).',';
       $arry['half_and_full_status']=implode(',',$menuhalf_and_full_status).',';
       $arry['menu_price']=implode(',',$menumenu_price).',';
-
       $arry['total_item']=$value['total_item'];
       $arry['net_pay_amount']=$value['net_pay_amount'];
       $arry['gst_amount']=$value['gst_amount'];
@@ -2487,7 +2480,6 @@ public function generateInvoiceOrderBycashier_post()
       $arry['status']=$value['status'];
       $arry['total_price']=$value['total_price'];
       $arry['discount']=$value['discount'];
-      $arry['menu_item_gst']=implode(',',$menu_item_gst).',';
       $result2=$this->Supervisor->getSubOrderForCashier($order_id);
       if(!empty($result2))
       {
@@ -2503,7 +2495,6 @@ public function generateInvoiceOrderBycashier_post()
             $menuquantity2[]             =$menuValue2['quantity'];
             $menuhalf_and_full_status2[] =$menuValue2['half_and_full_status'];
             $menumenu_price2[]           =$menuValue2['menu_price'];
-            $menu_item_gst2[]            =$menuValue2['gst'];
 
           } 
           // print_r(implode(',',$menuImages2).',');exit;
@@ -2520,19 +2511,16 @@ public function generateInvoiceOrderBycashier_post()
           $arry2['payment_status']=$value2['payment_status'];
           $arry2['status']=$value2['status'];
           $arry2['total_price']=$value2['total_price'];
-          $arry2['menu_item_gst']=implode(',',$menu_item_gst2).',';;
           $finalarray[]=$arry2;
           $menuImages2=array();
           $menuquantity2=array();
           $menuhalf_and_full_status2=array();
           $menumenu_price2=array();
-          $menu_item_gst2=array();
         }
         $menuImages=array();
         $menuquantity=array();
         $menuhalf_and_full_status=array();
         $menumenu_price=array();
-        $menu_item_gst=array();
       }
       $arry['sub_order']=$finalarray;
 
@@ -2938,17 +2926,17 @@ public function getMasterCategory_post()
         $result=$this->Supervisor->getMasterCategory($admin_id);
         if(!empty($result))
         {
-          $arry=array('status'=>'1','data'=>$result);
+          $arry['data']=array('status'=>'1','data'=>$result);
           $this->response($arry, 200);
         }else
         {
-          $arry=array('status'=>'0','data'=>'failed');
+          $arry['data']=array('status'=>'0','data'=>'failed');
           $this->response($arry, 200);
         }
 
       }else
       {
-        $arry=array('status'=>'0','data'=>'failed');
+        $arry['data']=array('status'=>'0','data'=>'failed');
         $this->response($arry, 200);
       }
   }catch(Ecception $e)

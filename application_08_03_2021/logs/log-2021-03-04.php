@@ -10,5 +10,3 @@ ERROR - 2021-03-04 03:52:23 --> 404 Page Not Found: customer/Menu_list_data_cust
 ERROR - 2021-03-04 03:52:59 --> 404 Page Not Found: customer/Menu_list_data_customer/index
 ERROR - 2021-03-04 03:53:27 --> 404 Page Not Found: customer/Menu_list_data_customer/index
 ERROR - 2021-03-04 03:53:54 --> 404 Page Not Found: customer/Menu_list_data_customer/index
-ERROR - 2021-03-04 23:46:36 --> Severity: error --> Exception: Call to a member function item() on null /var/www/html/Restaurant/application/controllers/customer/Api.php 1801
-ERROR - 2021-03-04 23:47:48 --> Severity: error --> Exception: syntax error, unexpected ';' /var/www/html/Restaurant/application/views/ccavResponseHandler.php 5

@@ -576,7 +576,7 @@ public function getCustId($order_id,$admin_id,$customer_mobile_no)
       }
       public function getOrderCalculation($orderid,$admin_id)
       {
-        $this->db->select('quantity,menu_price,gst');
+        $this->db->select('SUM(quantity) as quantity,SUM(menu_price) AS menu_price');
         $this->db->from(json_decode(TABLES)->table31);
         $this->db->where('order_id',$orderid);
         $this->db->where('admin_id',$admin_id);
@@ -588,7 +588,7 @@ public function getCustId($order_id,$admin_id,$customer_mobile_no)
       }
       public function getSubOrderCalculation($orderid,$admin_id,$sub_order_id)
       {
-        $this->db->select('quantity,menu_price,gst');
+        $this->db->select('SUM(quantity) as quantity,SUM(menu_price) AS menu_price');
         $this->db->from(json_decode(TABLES)->table32);
         $this->db->where('order_id',$orderid);
         $this->db->where('sub_order_id',$sub_order_id);

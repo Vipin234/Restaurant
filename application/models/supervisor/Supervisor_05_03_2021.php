@@ -338,11 +338,10 @@ class Supervisor extends CI_Model
       $menu_full_price=$data->menu_full_price;
       $menu_fix_price=$data->menu_fix_price;
       $nutrient_counts =$data->nutrient_counts;
-      $menu_category_id =$data->menu_category_id;
       date_default_timezone_set('Asia/kolkata'); 
       $now = date('Y-m-d H:i:s');
 
-      $this->db->query("UPDATE tbl_restaurant_menu_item_list SET menu_food_type='$menu_food_type', menu_name='$menu_name',menu_image='$menu_image',menu_detail='$menu_detail',menu_half_price='$menu_half_price',menu_full_price='$menu_full_price',menu_fix_price='$menu_fix_price',nutrient_counts='$nutrient_counts',modified_date='$now',menu_category_id='$menu_category_id' where menu_id='$menu_id'");
+      $this->db->query("UPDATE tbl_restaurant_menu_item_list SET menu_food_type='$menu_food_type', menu_name='$menu_name',menu_image='$menu_image',menu_detail='$menu_detail',menu_half_price='$menu_half_price',menu_full_price='$menu_full_price',menu_fix_price='$menu_fix_price',nutrient_counts='$nutrient_counts',modified_date='$now' where menu_id='$menu_id'");
 
     }
 

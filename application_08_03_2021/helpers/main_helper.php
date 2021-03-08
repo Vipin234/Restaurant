@@ -54,11 +54,32 @@ function json_output($data)
       $ch = curl_init();
       curl_setopt($ch,CURLOPT_URL,$url);
       curl_setopt($ch,CURLOPT_POST,count($fields));
-      curl_setopt($ch, CURLOPT_CAINFO,$pemurl);
+      curl_setopt($ch,CURLOPT_CAINFO,$pemurl);
       curl_setopt($ch,CURLOPT_POSTFIELDS,$postvars);
       curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
       curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
       $result = curl_exec($ch);
       return $result;
+}
+function txnLogs($response)
+{
+
+    date_default_timezone_set('Asia/kolkata');
+    $ci=& get_instance();
+    $ci->load->database();
+    $payment_id       =$response;
+    $order_id         =$response;
+    $payment_status   =$response;
+    $amount           =$response;
+    $device_id        =$response;
+    $logArray=array(
+                    'payment_id'        =>$payment_id,
+                    'order_id'          =>$order_id,
+                    'payment_status'    =>$payment_status,
+                    'amount'            =>$amount,
+                    'device_id'         =>$device_id,
+                    'created_on'        =>date('Y-m-d H:i:s')
+                );
+    $ci->db->insert('payment_logs', $logArray);
 }
 ?>

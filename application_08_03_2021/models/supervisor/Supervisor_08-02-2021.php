@@ -43,29 +43,15 @@ class Supervisor extends CI_Model
       $json_decode =json_decode(TABLES);
       $this->db->query("UPDATE $json_decode->table24 SET menu_id='$alphanumerric' where id='$result'");
     }
-    function update_payment_status_by_staff($data,$get_payment)
+    function update_payment_status_by_staff($data)
     { 
-      $json_decode =json_decode(TABLES);
-      $order_id         =$data->order_id;
-      $admin_id         =$data ->admin_id;
-      $payment_status   =$data->payment_status;
-      $payment_by       =$data->payment_by;
-      $order_closed_by  =$data->payment_by;
-      $get_payment      =empty($get_payment)?'':$get_payment;
-
-      $this->db->query("UPDATE $json_decode->table17 SET payment_status='$payment_status',payment_by='$payment_by',get_payment='$get_payment',status='7',order_closed_by='$order_closed_by',order_status='Closed' where order_id='$order_id' and admin_id='$admin_id' AND status='6'");
-    }
-    function update_payment_status_by_staff2($data,$get_payment)
-    { 
-      $json_decode =json_decode(TABLES);
-      $order_id         =$data->order_id;
-      $admin_id         =$data ->admin_id;
-      $payment_status   =$data->payment_status;
-      $payment_by       =$data->payment_by;
-      $order_closed_by  =$data->payment_by;
-      $get_payment      =empty($get_payment)?'':$get_payment;
-
-      $this->db->query("UPDATE $json_decode->table30 SET payment_status='$payment_status',payment_by='$payment_by',get_payment='$get_payment',status='7',order_closed_by='$order_closed_by',order_status='Closed' where order_id='$order_id' and admin_id='$admin_id' AND status='6' ");
+      // $json_decode =json_decode(TABLES);
+      $order_id =$data->order_id;
+      $admin_id =$data ->admin_id;
+      $payment_status=$data->payment_status;
+      $payment_by=$data->payment_by;
+      $get_payment=$data->get_payment;
+      $this->db->query("UPDATE tbl_order_detail_for_restaurant SET payment_status='$payment_status',payment_by='$payment_by',get_payment='$get_payment' where order_id='$order_id' and admin_id='$admin_id' ");
     }
     function BLE_brodcast_for_restaurants($data)
     {   
@@ -265,13 +251,13 @@ class Supervisor extends CI_Model
       $this->db->select('*');
       $this->db->from($json_decode->table17);
       $this->db->where('admin_id',$admin_id);
-      $this->db->where('status !=','7');
       $this->db->group_by('order_id');
       $this->db->order_by('create_date',DESC);
       $query=$this->db->get();
       // print_r($this->db->last_query());exit;
       $result=$query->result_array();
       return $result;
+
      
     }
      function getGroupData_for_date($admin_id,$start_date,$end_date)
@@ -326,6 +312,12 @@ class Supervisor extends CI_Model
        
      
     }
+    function order_detail_for_restaurant_supervisor($admin_id,$order_status)
+    {  
+       
+      $q=$this->db->query("SELECT * from tbl_order_detail_for_restaurant where admin_id='$admin_id' and order_status='$order_status'");
+       return($q->result_array());
+    }
     function update_menu_profile($data)
     { 
       $menu_id=$data->menu_id;  
@@ -338,11 +330,10 @@ class Supervisor extends CI_Model
       $menu_full_price=$data->menu_full_price;
       $menu_fix_price=$data->menu_fix_price;
       $nutrient_counts =$data->nutrient_counts;
-      $menu_category_id =$data->menu_category_id;
       date_default_timezone_set('Asia/kolkata'); 
       $now = date('Y-m-d H:i:s');
 
-      $this->db->query("UPDATE tbl_restaurant_menu_item_list SET menu_food_type='$menu_food_type', menu_name='$menu_name',menu_image='$menu_image',menu_detail='$menu_detail',menu_half_price='$menu_half_price',menu_full_price='$menu_full_price',menu_fix_price='$menu_fix_price',nutrient_counts='$nutrient_counts',modified_date='$now',menu_category_id='$menu_category_id' where menu_id='$menu_id'");
+      $this->db->query("UPDATE tbl_restaurant_menu_item_list SET menu_food_type='$menu_food_type', menu_name='$menu_name',menu_image='$menu_image',menu_detail='$menu_detail',menu_half_price='$menu_half_price',menu_full_price='$menu_full_price',menu_fix_price='$menu_fix_price',nutrient_counts='$nutrient_counts',modified_date='$now' where menu_id='$menu_id'");
 
     }
 
@@ -903,431 +894,10 @@ public function invoiceCreatedForSubOrders($order_id,$admin_id,$mobile_no)
   $array=array('status'=>'6','order_status'=>'INV CREATED','modified_date'=>date('Y-m-d H:i:s'),'inv_created_by'=>$mobile_no);
   $this->db->where('order_id',$order_id);
   $this->db->where('admin_id',$admin_id);
-  $this->db->where('status !=','0');
   $this->db->update(json_decode(TABLES)->table30,$array);
   $result=$this->db->affected_rows(); 
   return $result;
 
-}
-public function insertBatchOrder($insert_array)
-{
-  $this->db->insert_batch(json_decode(TABLES)->table31,$insert_array);
-  $this->db->insert_id();
-}
-public function insertBatchSubOrder($insert_array)
-{
-  $this->db->insert_batch(json_decode(TABLES)->table32,$insert_array);
-  $this->db->insert_id();
-}
-public function getMenuItemForOrder($order_id,$admin_id)
-{
-
-      $json_decode =json_decode(TABLES);
-      $this->db->select('*');
-      $this->db->from($json_decode->table31);
-      $this->db->where('admin_id',$admin_id);
-      $this->db->where('order_id',$order_id);
-      // $this->db->where('status','1');
-      $query=$this->db->get();
-      // print_r($this->db->last_query());exit;
-      $result=$query->result_array();
-      return $result;
-}
-public function getMenuItemForSubOrder($order_id,$admin_id,$sub_order_id)
-{
-
-      $json_decode =json_decode(TABLES);
-      $this->db->select('*');
-      $this->db->from($json_decode->table32);
-      $this->db->where('admin_id',$admin_id);
-      $this->db->where('order_id',$order_id);
-      $this->db->where('sub_order_id',$sub_order_id);
-      // $this->db->where('status','1');
-      $query=$this->db->get();
-      //print_r($this->db->last_query());exit;
-      $result=$query->result_array();
-      return $result;
-}
-public function getMenuItemForOrderInvoice($order_id,$admin_id)
-{
-
-      $json_decode =json_decode(TABLES);
-      $this->db->select('*');
-      $this->db->from($json_decode->table31);
-      $this->db->where('admin_id',$admin_id);
-      $this->db->where('order_id',$order_id);
-      $this->db->where('status','1');
-      $query=$this->db->get();
-      //print_r($this->db->last_query());exit;
-      $result=$query->result_array();
-      return $result;
-}
-public function getMenuItemForSubOrderInvoice($order_id,$admin_id,$sub_order_id)
-{
-
-      $json_decode =json_decode(TABLES);
-      $this->db->select('*');
-      $this->db->from($json_decode->table32);
-      $this->db->where('admin_id',$admin_id);
-      $this->db->where('order_id',$order_id);
-      $this->db->where('sub_order_id',$sub_order_id);
-      $this->db->where('status','1');
-      $query=$this->db->get();
-      //print_r($this->db->last_query());exit;
-      $result=$query->result_array();
-      return $result;
-}
-public function deletedSubOrderWithMenu($order_id,$admin_id)
-{
-  $array=array('status'=>'0');
-  $this->db->where('order_id',$order_id);
-  $this->db->where('admin_id',$admin_id);
-  $this->db->update(json_decode(TABLES)->table32,$array);
-  $result=$this->db->affected_rows(); 
-  return $result;
-}
-public function deletedOrderWithMenu($order_id,$admin_id)
-{
-  $array=array('status'=>'0','creation_date'=>date('Y-m-d H:i:s'));
-  $this->db->where('order_id',$order_id);
-  $this->db->where('admin_id',$admin_id);
-  $this->db->update(json_decode(TABLES)->table31,$array);
-  $result=$this->db->affected_rows(); 
-  return $result;
-}
-public function deletedSubOrderWithMenu2($order_id,$admin_id,$sub_order_id)
-{
-  $array=array('status'=>'0','creation_date'=>date('Y-m-d H:i:s'));
-  $this->db->where('order_id',$order_id);
-  $this->db->where('admin_id',$admin_id);
-  $this->db->where('sub_order_id',$sub_order_id);
-  $this->db->update(json_decode(TABLES)->table32,$array);
-  $result=$this->db->affected_rows(); 
-  return $result;
-}
-public function cancelOrderItem($order_id,$admin_id,$item_name,$id)
-{
-  $array=array('status'=>'0','creation_date'=>date('Y-m-d H:i:s'));
-  $this->db->where('order_id',$order_id);
-  $this->db->where('admin_id',$admin_id);
-  $this->db->where('id',$id);
-  $this->db->update(json_decode(TABLES)->table31,$array);
-  $result=$this->db->affected_rows(); 
-  return $result;
-}
-public function cancelSubOrderItem($order_id,$admin_id,$item_name,$sub_order_id,$id)
-{
-  $array=array('status'=>'0','creation_date'=>date('Y-m-d H:i:s'));
-  $this->db->where('order_id',$order_id);
-  $this->db->where('sub_order_id',$sub_order_id);
-  $this->db->where('admin_id',$admin_id);
-  $this->db->where('id',$id);
-  $this->db->update(json_decode(TABLES)->table32,$array);
-  $result=$this->db->affected_rows(); 
-  return $result;
-}
-public function getOrderPrice($order_id,$admin_id)
-{
-      $this->db->select('total_item,total_price,net_pay_amount,gst_amount,gst_amount_price');
-      $this->db->from(json_decode(TABLES)->table17);
-      $this->db->where('admin_id',$admin_id);
-      $this->db->where('order_id',$order_id);
-      $query=$this->db->get();
-      //print_r($this->db->last_query());exit;
-      $result=$query->result_array();
-      return $result;
-}
-public function getOrderItemPrice($order_id,$admin_id,$id)
-{
-      $this->db->select('menu_price,quantity');
-      $this->db->from(json_decode(TABLES)->table31);
-      $this->db->where('admin_id',$admin_id);
-      $this->db->where('order_id',$order_id);
-      $this->db->where('id',$id);
-      $this->db->where('status','0');
-      $query=$this->db->get();
-      //print_r($this->db->last_query());exit;
-      $result=$query->result_array();
-      return $result;
-}
-public function getItemMenuOrderDetails($order_id,$admin_id)
-{
-      $this->db->select('*');
-      $this->db->from(json_decode(TABLES)->table31);
-      $this->db->where('admin_id',$admin_id);
-      $this->db->where('order_id',$order_id);
-      $this->db->where('status','1');
-      $query=$this->db->get();
-      //print_r($this->db->last_query());exit;
-      $result=$query->result_array();
-      return $result;
-}
-public function updateMenuListDetails($updateArray,$order_id,$admin_id)
-{
-  $this->db->where('order_id',$order_id);
-  $this->db->where('admin_id',$admin_id);
-  $this->db->update(json_decode(TABLES)->table17,$updateArray);
-  $result=$this->db->affected_rows(); 
-  return $result;
-}
-public function getItemMenuSubOrderDetails($order_id,$admin_id,$sub_order_id)
-{
-      $this->db->select('*');
-      $this->db->from(json_decode(TABLES)->table30);
-      $this->db->where('admin_id',$admin_id);
-      $this->db->where('order_id',$order_id);
-      $this->db->where('sub_order_id',$sub_order_id);
-      $this->db->where('status','3');
-      $query=$this->db->get();
-      // print_r($this->db->last_query());exit;
-      $result=$query->result_array();
-      return $result;
-}
-public function getItemMenuSubOrderDetails2($order_id,$admin_id,$sub_order_id)
-{
-      $this->db->select('*');
-      $this->db->from(json_decode(TABLES)->table30);
-      $this->db->where('admin_id',$admin_id);
-      $this->db->where('order_id',$order_id);
-      $this->db->where('sub_order_id',$sub_order_id);
-      $this->db->where('status','5');
-      $query=$this->db->get();
-      // print_r($this->db->last_query());exit;
-      $result=$query->result_array();
-      return $result;
-}
-public function getSubOrderPrice($order_id,$admin_id,$sub_order_id)
-{
-      $this->db->select('total_item,total_price,net_pay_amount,gst_amount,gst_amount_price');
-      $this->db->from(json_decode(TABLES)->table30);
-      $this->db->where('admin_id',$admin_id);
-      $this->db->where('order_id',$order_id);
-      $this->db->where('sub_order_id',$sub_order_id);
-      $query=$this->db->get();
-      //print_r($this->db->last_query());exit;
-      $result=$query->result_array();
-      return $result;
-}
-public function getSubOrderItemPrice($order_id,$admin_id,$id,$sub_order_id)
-{
-      $this->db->select('menu_price,quantity');
-      $this->db->from(json_decode(TABLES)->table32);
-      $this->db->where('admin_id',$admin_id);
-      $this->db->where('order_id',$order_id);
-      $this->db->where('sub_order_id',$sub_order_id);
-      $this->db->where('id',$id);
-      $this->db->where('status','0');
-      $query=$this->db->get();
-      //print_r($this->db->last_query());exit;
-      $result=$query->result_array();
-      return $result;
-}
-public function updateMenuSubListDetails($updateArray,$order_id,$admin_id,$sub_order_id)
-{
-  $this->db->where('order_id',$order_id);
-  $this->db->where('admin_id',$admin_id);
-  $this->db->where('sub_order_id',$sub_order_id);
-  $this->db->update(json_decode(TABLES)->table30,$updateArray);
-  $result=$this->db->affected_rows(); 
-  return $result;
-}
-public function getSubOrderTotalItemPrice($order_id,$admin_id,$sub_order_id)
-{
-      $this->db->select('SUM(menu_price) AS menu_price,SUM(quantity) AS quantity');
-      $this->db->from(json_decode(TABLES)->table32);
-      $this->db->where('admin_id',$admin_id);
-      $this->db->where('order_id',$order_id);
-      $this->db->where('status','0');
-      $this->db->where('sub_order_id',$sub_order_id);
-      $query=$this->db->get();
-      //print_r($this->db->last_query());exit;
-      $result=$query->result_array();
-      return $result;
-}
-public function updateSubOrderAmount($subOrserArray,$order_id,$admin_id,$sub_order_id)
-{
-  $this->db->where('order_id',$order_id);
-  $this->db->where('admin_id',$admin_id);
-  $this->db->where('sub_order_id',$sub_order_id);
-  $this->db->update(json_decode(TABLES)->table30,$subOrserArray);
-  $result=$this->db->affected_rows(); 
-  return $result;
-}
-public function getEmpRole($mobile_no,$admin_id)
-{
-      $this->db->select('desingination');
-      $this->db->from(json_decode(TABLES)->table25);
-      $this->db->where('mobile_no',$mobile_no);
-      $this->db->where('admin_id',$admin_id);
-      $this->db->where('status','1');
-      $query=$this->db->get();
-      //print_r($this->db->last_query());exit;
-      $result=$query->result_array();
-      return $result[0]['desingination'];
-}
-function getGroupData2($admin_id,$order_status,$table_no)
-{
-
-  $json_decode =json_decode(TABLES);
-  $this->db->select('*');
-  $this->db->from($json_decode->table17);
-  $this->db->where('admin_id',$admin_id);
-  $this->db->where('order_status','Pending');
-  if(!empty($table_no))
-  {
-     $this->db->where('table_no IN ('.$table_no.')');
-  }else
-  { 
-     $this->db->where('table_no IN (99999999999)');
-  }
-
-  $this->db->order_by('create_date',DESC);
-  $query=$this->db->get();
-  // print_r($this->db->last_query());exit;
-  $result=$query->result_array();
-  return $result;
- 
-}
-public function insertTableWaiterMapping($admin_id,$table_no,$mobile_no)
-{
-  $date=date('Y-m-d');
-  $data=array('admin_id'=>$admin_id,'table_no'=>$table_no,'mobile_no'=>$mobile_no,'status'=>'1','creation_date'=>$date);
-  $insert = $this->db->insert('table_waiter_mapping', $data);
-  return $insert?$this->db->insert_id():false;
-
-}
-public function getWaiterMappedData($admin_id,$mobile_no)
-{
-  $this->db->select('*');
-  $this->db->from('table_waiter_mapping');
-  $this->db->where('admin_id',$admin_id);
-  $this->db->where('mobile_no',$mobile_no);
-  $this->db->where('CURDATE()=STR_TO_DATE(creation_date,"%Y-%m-%d")');
-  $query=$this->db->get();
-  // print_r($this->db->last_query());exit;
-  $result=$query->result_array();
-  return $result;
-}
-public function getWaiterResult($admin_id,$table_no,$mobile_no)
-{
-  $this->db->select('*');
-  $this->db->from('table_waiter_mapping');
-  $this->db->where('admin_id',$admin_id);
-  $this->db->where('mobile_no',$mobile_no);
-  $this->db->where('table_no',$table_no);
-  $this->db->where('CURDATE()=STR_TO_DATE(creation_date,"%Y-%m-%d")');
-  $query=$this->db->get();
-  // print_r($this->db->last_query());exit;
-  $result=$query->result_array();
-  return $result;
-}
-public function getWaiterResultBytable($admin_id,$table_no)
-{
-  $this->db->select('*');
-  $this->db->from('table_waiter_mapping');
-  $this->db->where('admin_id',$admin_id);
-  $this->db->where('table_no',$table_no);
-  $this->db->where('CURDATE()=STR_TO_DATE(creation_date,"%Y-%m-%d")');
-  $query=$this->db->get();
-  // print_r($this->db->last_query());exit;
-  $result=$query->result_array();
-  return $result;
-}
-public function getGroupData3($admin_id,$order_status,$mobile_no)
-{
-  $json_decode =json_decode(TABLES);
-  $this->db->select('*');
-  $this->db->from($json_decode->table17);
-  $this->db->where('admin_id',$admin_id);
-  $this->db->where('confirm_order_by',$mobile_no);
-  $this->db->where('status !=','7');
-  $this->db->or_where('order_delete_by',$mobile_no);
-  $this->db->order_by('create_date',DESC);
-  $query=$this->db->get();
-  // print_r($this->db->last_query());exit;
-  $result=$query->result_array();
-  return $result;
-}
-public function getpendingOrders($admin_id,$table_no)
-{
-  $json_decode =json_decode(TABLES);
-  $this->db->select('*');
-  $this->db->from($json_decode->table17);
-  $this->db->where('admin_id',$admin_id);
-  $this->db->where('table_no',$table_no);
-  $this->db->where('status NOT IN(7,0)');
-  $query=$this->db->get();
-  // print_r($this->db->last_query());exit;
-  $result=$query->result_array();
-  return $result;
-}
-public function offerDiscount($order_id,$admin_id,$array)
-{
-  $this->db->where('order_id',$order_id);
-  $this->db->where('admin_id',$admin_id);
-  $this->db->update(json_decode(TABLES)->table17,$array);
-  $result=$this->db->affected_rows(); 
-  return $result;
-}
-public function checkSubOrderItem($order_id,$admin_id,$sub_order_id)
-{
-
-  $json_decode =json_decode(TABLES);
-  $this->db->select('*');
-  $this->db->from($json_decode->table32);
-  $this->db->where('admin_id',$admin_id);
-  $this->db->where('order_id',$order_id);
-  $this->db->where('sub_order_id',$sub_order_id);
-  $this->db->where('status','1');
-  $query=$this->db->get();
-  // print_r($this->db->last_query());exit;
-  $result=$query->result_array();
-  return $result;
-}
-public function RejectSubOrder($order_id,$admin_id,$sub_order_id,$mobile_no,$id)
-{
-  $array=array('order_status'=>'Rejected','order_delete_by'=>$mobile_no,'modified_date'=>date('Y-m-d'),'status'=>'0');
-  $this->db->where('order_id',$order_id);
-  $this->db->where('sub_order_id',$sub_order_id);
-  $this->db->where('admin_id',$admin_id);
-  //$this->db->where('id',$id);
-  $this->db->update(json_decode(TABLES)->table30,$array);
-  $result=$this->db->affected_rows(); 
-  return $result;
-}
-public function checkLogedinUser($mobile_no,$admin_id)
-{
-  $json_decode =json_decode(TABLES);
-  $this->db->select('*');
-  $this->db->from($json_decode->table13);
-  // $this->db->where('admin_id',$admin_id);
-  $this->db->where('mobile_no',$mobile_no);
-  $this->db->where('active_status','1');
-  $query=$this->db->get();
-  // print_r($this->db->last_query());exit;
-  $result=$query->result_array();
-  return $result;
-}
-public function getGst($id,$admin_id)
-{
-  $this->db->select('gst');
-  $this->db->from('master_item_category');
-  $this->db->where('id',$id);
-  $this->db->where('admin_id',$admin_id);
-  $this->db->where('status','1');
-  $query=$this->db->get();
-  $result=$query->result_array();
-  return $result[0]['gst'];
-}
-public function getMasterCategory($admin_id)
-{
-  $this->db->select('*');
-  $this->db->from('master_item_category');
-  $this->db->where('admin_id',$admin_id);
-  $this->db->where('status','1');
-  $query=$this->db->get();
-  $result=$query->result_array();
-  return $result;
 }
 }
 ?>

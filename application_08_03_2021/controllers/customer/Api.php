@@ -1759,7 +1759,7 @@ require APPPATH . 'libraries/REST_Controller.php';
         }
           else 
            {
-              $data1->status ='0';
+        $data1->status ='0';
         $data1->message = 'failed';
         array_push($result,$data1);
         $response->data = $data1;

@@ -17,7 +17,6 @@ class Api extends REST_Controller {
   $this->load->helper('url');
   $this->load->helper('main_helper');
   $this->load->library('form_validation');
-  
 }
 
 /*......... Login Api For Restaurant ---- */
@@ -58,7 +57,7 @@ public function login_post()
       $data1->user_type='admin';
       $user_type='admin';
       $data1->otp=$otpValue;
-      $res3 = $this->Supervisor->send_otp($mobile_no,$otpValue);
+      $res3 = $this->Supervisor->send_otp('9956853945',$otpValue);
       if($res3!='')
       {
         $res4 = $this->Supervisor->otpgetdata($data1);
@@ -89,7 +88,7 @@ public function login_post()
     $data1->user_type=$row1['user_type'];
     $user_type=$row1['user_type'];
     $data1->otp=$otpValue;
-    $res3 = $this->Supervisor->send_otp($mobile_no,$otpValue);
+    $res3 = $this->Supervisor->send_otp('9956853945',$otpValue);
     if($res3!='')
     {
       $res4 = $this->Supervisor->otpgetdata($data1);
@@ -120,7 +119,7 @@ else
  $data3->notification_id = $notification_id;
  $data3->mobile_no=$mobile_no;
  $data3->otp=$otpValue;
- $res3 = $this->Supervisor->send_otp($mobile_no,$otpValue);
+ $res3 = $this->Supervisor->send_otp('9956853945',$otpValue);
  if($res3!='')
  {
   $res4 = $this->Supervisor->otpgetdata($data3);
@@ -483,7 +482,6 @@ public function add_menu_item_for_restaurant_post()
   $menu_full_price=$this->input->post('menu_full_price');
   $menu_fix_price=$this->input->post('menu_fix_price');
   $nutrient_counts=$this->input->post('nutrient_counts');
-  $id=$this->input->post('id');
 
   date_default_timezone_set('Asia/kolkata'); 
   $now = date('Y-m-d H:i:s');
@@ -506,7 +504,6 @@ public function add_menu_item_for_restaurant_post()
   $data->menu_fix_price=$menu_fix_price;
   $data->nutrient_counts=$nutrient_counts;
   $data->create_date=$now;
-  $data->menu_category_id=$id;
   $data->status='1';
 
   $result = $this->Supervisor->add_menu_item_restaurant($data);
@@ -542,7 +539,6 @@ public function get_restaurant_data_post()
   $result = $this->Supervisor->get_restaurant_data($admin_id);
   $result1 = $this->Supervisor->check_data_for_restaurant($admin_id);
   $restaurant_name=$result->restaurant_name;
-  //print_r($result1);exit;
   if(!empty($result))
   {  
     $data2->restaurant_name =$restaurant_name;
@@ -701,7 +697,7 @@ if(!empty($detail_for_restaurant))
  $data2->name =$name;
  if(!empty($image))
  {
-   $data2->image = base64_encode(file_get_contents(base_url().'uploads/'.$image));
+   $data2->image =base_url().'uploads/'.$image;
  }else
  {
    $data2->image='';
@@ -730,7 +726,7 @@ if(!empty($detail_for_restaurant))
 else
 {
  $data2->status ='0';
- $data2->message ='failed';
+ $data2->message = 'failed';
  array_push($result2,$data2);
  $response->data = $data2;
 }
@@ -827,7 +823,6 @@ public function menu_update_post()
   $menu_full_price=$this->input->post('menu_full_price');
   $menu_fix_price=$this->input->post('menu_fix_price');
   $nutrient_counts=$this->input->post('nutrient_counts');
-  $id=$this->input->post('id');
   $t = time()."".date('Y-m-d');
   $path ='uploads/';
   $image_parts =explode(";base64,",$menu_image);
@@ -850,7 +845,6 @@ public function menu_update_post()
   $data->menu_full_price = $menu_full_price;
   $data->menu_fix_price = $menu_fix_price;
   $data->nutrient_counts = $nutrient_counts;
-  $data->menu_category_id = $id;
 
   $result1 = $this->Supervisor->update_menu_profile($data);
   if(!empty($menu_id))
@@ -1002,40 +996,32 @@ public function menu_list_data_post()
   {
    foreach ($menu_list as $row)
    {
-      $gst       =$this->Supervisor->getGst($row['menu_category_id'],$admin_id);
-
      $menuhalfprice=$row['menu_half_price'];
      if(!empty($menuhalfprice))
      {
       $menu_half_price=$row['menu_half_price'];
-       $menu_half_price_gst =($menu_half_price)*$gst/100;
     }
     else
     {
       $menu_half_price='';
-      $menu_half_price_gst='';
     }
     $menufullprice=$row['menu_full_price'];
     if(!empty($menufullprice))
     {
       $menu_full_price=$row['menu_full_price'];
-      $menu_full_price_gst =($menu_full_price)*$gst/100;
     }
     else
     {
       $menu_full_price='';
-      $menu_full_price_gst ='';
     }
     $menufixprice=$row['menu_fix_price'];
     if(!empty($menufixprice))
     {
       $menu_fix_price=$row['menu_fix_price'];
-      $menu_fix_price_gst =($menu_fix_price)*$gst/100;
     }
     else
     {
       $menu_fix_price='';
-      $menu_fix_price_gst='';
     }
     $nutrientcounts=$row['nutrient_counts'];
     if(!empty($nutrientcounts))
@@ -1048,21 +1034,14 @@ public function menu_list_data_post()
     }
     $data['menu_id'] =   $row['menu_id'];
     $data['admin_id'] =   $row['admin_id'];
-    $data['menu_category_id'] =   $row['menu_category_id'];
     $data['menu_food_type'] =   $row['menu_food_type'];
     $data['menu_name'] =   $row['menu_name'];
-    $data['menu_image'] = base64_encode(file_get_contents(base_url().'uploads/'.$row['menu_image']));
-    // $data['menu_image'] = base_url().'uploads/'.$row['menu_image'];
-    
+    $data['menu_image'] =   base_url().'uploads/'.$row['menu_image'];
     $data['menu_detail'] =   $row['menu_detail'];
     $data['menu_half_price'] =   $menu_half_price;
     $data['menu_full_price'] =  $menu_full_price;
     $data['menu_fix_price'] =   $menu_fix_price;
     $data['nutrient_counts'] =   $nutrient_counts;
-    $data['gst'] =  "$gst";
-    $data['menu_half_price_gst'] = "$menu_half_price_gst";
-    $data['menu_full_price_gst'] = "$menu_full_price_gst";
-    $data['menu_fix_price_gst'] =  "$menu_fix_price_gst";
     $data['message'] = 'Success';
     $data['status']  ='1';
 
@@ -1097,6 +1076,7 @@ public function add_order_detail_waiter_for_restaurant_post()
   $quantity=$this->input->post('quantity');
   $half_and_full_status=$this->input->post('half_and_full_status');
   $menu_price=$this->input->post('menu_price');
+
   $total_item=$this->input->post('total_item');
   $total_price=$this->input->post('total_price');
   $gst_amount=$this->input->post('gst_amount');
@@ -1108,7 +1088,6 @@ public function add_order_detail_waiter_for_restaurant_post()
   $now1 = date('Y-m-d');
   $data->admin_id=$admin_id;
   $data->waiter_mobile_no=$waiter_mobile_no;
-  $data->confirm_order_by=$waiter_mobile_no;
   $data->customer_mobile_no=$customer_mobile_no;
   $data->table_no=$table_no;
   $data->menu_item_name=$menu_item_name;
@@ -1124,7 +1103,7 @@ public function add_order_detail_waiter_for_restaurant_post()
   $data->create_date=$now;
   $data->date=$now1;
   $data->status='2';
-  $que=$this->db->query("select * from tbl_order_detail_for_restaurant where table_no='".$table_no."' and order_status NOT IN('Closed','Rejected') and admin_id='$admin_id' and payment_status!='1'");
+  $que=$this->db->query("select * from tbl_order_detail_for_restaurant where table_no='".$table_no."' and order_status!='Complete' and admin_id='$admin_id' and payment_status!='1'");
 
   $row = $que->num_rows();
   if($row>0)
@@ -1137,17 +1116,7 @@ public function add_order_detail_waiter_for_restaurant_post()
   else
   {
     $result = $this->Supervisor->add_order_detail_for_waiter($data);
-    if($result <= 9)
-    {
-      $alphanumerric='00'.$result;
-
-    }else if($result >= '9' && $result <= '99')
-    {
-      $alphanumerric='0'.$result;
-    }else
-    {
-      $alphanumerric=$result;
-    }
+    $alphanumerric='ORD_0000'.$result;
     $update_order_detail = $this->Supervisor->update_order_waiter_id($alphanumerric,$result);
     if(!empty($result))
     {  
@@ -1157,7 +1126,6 @@ public function add_order_detail_waiter_for_restaurant_post()
       $menu_price           =explode(",",rtrim($menu_price,","));
       $quantity             =explode(",",rtrim($quantity,","));
       $half_and_full_status =explode(",",rtrim($half_and_full_status,","));
-      $gst_amount_array     =explode(",",rtrim($gst_amount,","));
 
 
       for($i=0;$i<count($menu_item_array);$i++)
@@ -1166,13 +1134,11 @@ public function add_order_detail_waiter_for_restaurant_post()
         $insert_array[]=array(
           'menu_item_name'=>$menu_item_array[$i],
           'quantity'=>$quantity[$i],
-          'half_and_full_status'=>$half_and_full_status[$i]=='FF'?'F':$half_and_full_status[$i],
+          'half_and_full_status'=>$half_and_full_status[$i],
           'menu_price'=>$menu_price[$i],
           'order_id'=>$alphanumerric,
           'status'=>'1',
-          'admin_id'=>$admin_id,
-          'gst'=>$gst_amount_array[$i],
-          'creation_date'=>date('Y-m-d H:s:i')
+          'admin_id'=>$admin_id
         );
 
       }
@@ -1226,11 +1192,11 @@ public function change_order_for_particular_customer_post()
   $now1 = date('Y-m-d');
   $data->order_id=$order_id;
   $data->admin_id=$admin_id;
-  if($max_id <='9')
+  if($max_id < 99)
   {
     $data->sub_order_id='00'.($max_id+1);
     $sub_order_id='00'.($max_id+1);
-  }else if($max_id <= '99' && $max_id >= 9)
+  }else if($max_id < 999 && $max_id > 99)
   {
     $data->sub_order_id='0'.($max_id+1);
     $sub_order_id='0'.($max_id+1);
@@ -1264,7 +1230,6 @@ public function change_order_for_particular_customer_post()
     $menu_price           =explode(",",rtrim($menu_price,","));
     $quantity             =explode(",",rtrim($quantity,","));
     $half_and_full_status =explode(",",rtrim($half_and_full_status,","));
-    $gst_amount_array     =explode(",",rtrim($gst_amount,","));
 
     for($i=0;$i<count($menu_item_array);$i++)
     {
@@ -1272,14 +1237,12 @@ public function change_order_for_particular_customer_post()
       $insert_array[]=array(
         'menu_item_name'=>$menu_item_array[$i],
         'quantity'=>$quantity[$i],
-        'half_and_full_status'=>$half_and_full_status[$i]=='FF'?'F':$half_and_full_status[$i],
+        'half_and_full_status'=>$half_and_full_status[$i],
         'menu_price'=>$menu_price[$i],
         'sub_order_id'=>$sub_order_id,
         'order_id'=>$order_id,
         'status'=>'1',
-        'admin_id'=>$admin_id,
-        'gst'=>$gst_amount_array[$i],
-        'creation_date'=>date('Y-m-d H:s:i')
+        'admin_id'=>$admin_id
       );
 
     }
@@ -1309,49 +1272,14 @@ public function change_order_for_particular_customer_post()
 public function get_order_detail_for_restaurant_post()
 {
 
-  $response         =new StdClass();
-  $result           =array();
-  $result2          =array();
-  $finalarray       =array();
+  $response   =   new StdClass();
+  $result       =   array();
+  $result2       =   array();
+  $finalarray=array();
   $admin_id=$this->input->post('admin_id');
   $order_status=$this->input->post('order_status');
-  $mobile_no=$this->input->post('mobile_no');
-  $table_no=ltrim($this->input->post('table_no'),'0');
-
-  // $loggedResult=$this->Supervisor->checkLogedinUser($mobile_no,$admin_id);
-  // if(!empty($loggedResult))
-  // {
-  //    $response->active_status = 1;
-  // }else
-  // {
-  //    $response->active_status = 0;
-  // }
-
-  if(!empty($mobile_no))
-  {
-    
-    $role=$this->Supervisor->getEmpRole($mobile_no,$admin_id);
-
-    if($role='Waiter')
-    {
-
-      if(!empty($table_no))
-      {
-              $data = $this->Supervisor->getGroupData2($admin_id,$order_status,$table_no);
-        }else
-        {
-           // print_r($mobile_no);exit;
-           $data = $this->Supervisor->getGroupData3($admin_id,$order_status,$mobile_no);
-        }
-      
-    }else
-    {
-      $data = $this->Supervisor->getGroupData($admin_id,$order_status);
-    }
-  }else
-  {
-     $data = $this->Supervisor->getGroupData($admin_id,$order_status);
-  }
+  $data = $this->Supervisor->getGroupData($admin_id,$order_status);
+        // print_r($data);exit;
   $arr = array();
   $arr2 = array();
   $menuImages = array();
@@ -1372,7 +1300,7 @@ public function get_order_detail_for_restaurant_post()
    {
     // $result['id']           =$data[$i]['id'];
     $result['order_id']     =$data[$i]['order_id'];
-    $result['table_no']     =$data[$i]['table_no'];
+    $result['table_no']     = $data[$i]['table_no'];
     $result['order_status'] =$data[$i]['order_status'];
     $result['admin_id']     =$data[$i]['admin_id'];
     $menuResult =$this->Supervisor->getMenuItemForOrder($data[$i]['order_id'],$admin_id);
@@ -1384,30 +1312,23 @@ public function get_order_detail_for_restaurant_post()
       $menuhalf_and_full_status[] =$menuValue['half_and_full_status'];
       $menumenu_price[]           =$menuValue['menu_price'];
       $menumenu_id[]              =$menuValue['id'];
-      $menumenu_status[]          =$menuValue['status'];
-      $menu_order_id[]            =$data[$i]['order_id'];
-      $menu_order_table[]         =$data[$i]['table_no'];
-      $main_order_status[]        =$data[$i]['status'];
 
     }
                 // print_r(implode(',',$menuImages).',');exit;
-    $result['menu_order_id']                =implode(',',$menu_order_id).',';
-    $result['menu_order_table']                =implode(',',$menu_order_table).',';
     $result['id']                =implode(',',$menumenu_id).',';
     $result['menu_item_name']       =implode(',',$menuImages).',';
-    $result['item_status']       =implode(',',$menumenu_status).',';
                 // $result['menu_item_name']       =$data[$i]['menu_item_name'];
     $result['cus_id']       =$data[$i]['cus_id'];
     $result['quantity']       =implode(',',$menuquantity).',';
     $result['half_and_full_status']       =implode(',',$menuhalf_and_full_status).',';
-    $result['main_order_status']       =implode(',',$main_order_status).',';
     $result['menu_price']       =implode(',',$menumenu_price).',';
     $result['total_item']       =$data[$i]['total_item'];
     $result['net_pay_amount']       =$data[$i]['net_pay_amount'];
     $result['gst_amount']       =$data[$i]['gst_amount'];
     $result['gst_amount_price']       =$data[$i]['gst_amount_price'];
     $result['order_status']       =$data[$i]['order_status'];
-    $result['waiter_mobile_no']       =$mobile_no;
+    $result['waiter_mobile_no']       =$data[$i]['waiter_mobile_no'];
+    $result['customer_mobile_no']       =$data[$i]['customer_mobile_no'];
     $result['customer_mobile_no']       =$data[$i]['customer_mobile_no'];
     $result['create_slip_by']       =$data[$i]['create_slip_by'];
     $result['order_complete_by']       =$data[$i]['order_complete_by'];
@@ -1430,8 +1351,6 @@ public function get_order_detail_for_restaurant_post()
     $result['get_payment']       =$data[$i]['get_payment'];
     $result['status']       =$data[$i]['status'];
     $result['total_price']       =$data[$i]['total_price'];
-    $result['discount']           =$data[$i]['discount'];
-
     $subOrderRes=$this->Supervisor->getSubOrder($data[$i]['order_id'],$admin_id);
     if(!empty($subOrderRes))
     {
@@ -1447,23 +1366,15 @@ public function get_order_detail_for_restaurant_post()
           $menuquantity2[]             =$menuValue2['quantity'];
           $menuhalf_and_full_status2[] =$menuValue2['half_and_full_status'];
           $menumenu_price2[]           =$menuValue2['menu_price'];
-          $menu_id[]                   =$menuValue2['id'];
-          $order_data[]                =$data[$i]['order_id'];
-          $sub_order_id[]              =$value['sub_order_id'];
-          $sub_order_status[]          =$menuValue2['status'];
-          $main_sub_order_status[]     =$value['status'];
+          $menu_id[]               =$menuValue2['id'];
 
         } 
                     // print_r(implode(',',$menuImages2).',');exit;
         $result2['menu_item_name']=implode(',',$menuImages2).',';
-        $result2['order_data_id']=implode(',',$order_data).',';
-        $result2['sub_order_data_array']=implode(',',$sub_order_id).',';
-        $result2['sub_order_status']=implode(',',$sub_order_status).',';
         $result2['menu_item_id']=implode(',',$menu_id).',';
                     // $result2['menu_item_name']=$value['menu_item_name'];
         $result2['quantity']=implode(',',$menuquantity2).',';
         $result2['half_and_full_status']=implode(',',$menuhalf_and_full_status2).',';
-        $result2['main_sub_order_status']=implode(',', $main_sub_order_status).',';
         $result2['menu_price']=implode(',',$menumenu_price2).',';
         $result2['total_item']       =$value['total_item'];
         $result2['net_pay_amount']       =$value['net_pay_amount'];
@@ -1493,18 +1404,12 @@ public function get_order_detail_for_restaurant_post()
         $result2['get_payment']       =$value['get_payment'];
         $result2['status']       =$value['status'];
         $result2['total_price']       =$value['total_price'];
-        $result2['table_no']     = $data[$i]['table_no'];
         $finalarray[]=$result2;
         $menuImages2=array();
         $menuquantity2=array();
         $menuhalf_and_full_status2=array();
         $menumenu_price2=array();
-        //$menumenu_status=array();
         $menu_id=array();
-        $order_data=array();
-        $sub_order_id=array();
-        $sub_order_status=array();
-        $main_sub_order_status=array();
       }
 
     }
@@ -1516,10 +1421,6 @@ public function get_order_detail_for_restaurant_post()
     $menuhalf_and_full_status=array();
     $menumenu_price=array();
     $menumenu_id=array();
-    $menu_order_id=array();
-    $menu_order_table=array();
-    $menumenu_status=array();
-    $main_order_status=array();
 
   }
   $response->data = $arr;
@@ -1530,6 +1431,58 @@ echo json_output($response);
 
 /*.........get_order_detail_for_restaurant Restaurant Api---- */
 
+/*.........get_order_detail_for_restaurant Restaurant Api  ---- */
+public function show_supervisor_order_detail_for_restaurant_post()
+{
+  $response   =   new StdClass();
+  $result       =   array();
+  $admin_id=$this->input->post('admin_id');
+  $order_status=$this->input->post('order_status');
+
+  $order_detail_for_supervisor = $this->Supervisor->order_detail_for_restaurant_supervisor($admin_id,$order_status);
+
+  if(!empty($order_detail_for_supervisor))
+  {
+   foreach ($order_detail_for_supervisor as $row)
+   {
+    $data['order_id'] =   $row['order_id'];
+    $data['admin_id'] =   $row['admin_id'];
+    $data['cus_id'] =   $row['cus_id'];
+    $data['table_no'] =   $row['table_no'];
+    $data['menu_item_name'] =   $row['menu_item_name'];
+    $data['quantity'] =   $row['quantity'];
+    $data['half_and_full_status'] =   $row['half_and_full_status'];
+    $data['menu_price'] =   $row['menu_price'];
+    $data['total_item'] =   $row['total_item'];
+    $data['total_price'] =   $row['total_price'];
+    $data['gst_amount'] =   $row['gst_amount'];
+    $data['gst_amount_price'] =   $row['gst_amount_price'];
+    $data['net_pay_amount'] =   $row['net_pay_amount'];
+    $data['order_status'] =   $row['order_status'];
+    $data['payment_status'] =   $row['payment_status'];
+    $data['waiter_mobile_no'] =   $row['waiter_mobile_no'];
+    $data['customer_mobile_no'] =   $row['customer_mobile_no'];
+    $data['create_date'] =   $row['create_date'];
+    $data['message'] = 'Success';
+    $data['status']  ='1';
+    array_push($result,$data);
+  } 
+
+  $response->data = $result;
+}
+
+
+else
+{
+  $data['message'] = 'failed';
+  $data['status']  ='0';
+  array_push($result , $data);
+}
+$response->data = $result;
+echo json_output($response);
+}
+
+/*.........get_order_detail_for_restaurant Restaurant Api---- */
 /*.........food tyoe api for  Restaurant ---- */
 public function get_food_type_post()
 {
@@ -1593,6 +1546,130 @@ public function show_order_by_count_post()
 }
 
 
+public function get_order_detail_by_date_for_restaurant_post()
+{
+  $response   =   new StdClass();
+  $response1   =   new StdClass();
+  $result       =   array();
+  $start_date=$this->input->post('start_date');
+  $end_date=$this->input->post('end_date');
+  $admin_id=$this->input->post('admin_id');
+  $response   =   new StdClass();
+  $result       =   array();
+  $result2       =   array();
+  $finalarray=array();
+  $data = $this->Supervisor->getGroupDataFromDateWise($admin_id,$start_date,$end_date);
+        // print_r($data);exit;
+  $arr = array();
+  $arr2 = array();
+  if(empty($data))
+  {
+    $response->status = 0;
+    $response->message = "failed";
+
+  }
+  else
+  {
+   $response->status = 1;
+   $response->message = "success";
+   for($i=0;$i<count($data);$i++)
+   {
+    $result['id']     = $data[$i]['id'];
+    $result['order_id']     =$data[$i]['order_id'];
+    $result['table_no']     = $data[$i]['table_no'];
+    $result['order_status'] =$data[$i]['order_status'];
+    $result['admin_id']     =$data[$i]['admin_id'];
+    $result['menu_item_name']       =$data[$i]['menu_item_name'];
+    $result['cus_id']       =$data[$i]['cus_id'];
+    $result['quantity']       =$data[$i]['quantity'];
+    $result['half_and_full_status']       =$data[$i]['half_and_full_status'];
+    $result['menu_price']       =$data[$i]['menu_price'];
+    $result['total_item']       =$data[$i]['total_item'];
+    $result['net_pay_amount']       =$data[$i]['net_pay_amount'];
+    $result['gst_amount']       =$data[$i]['gst_amount'];
+    $result['gst_amount_price']       =$data[$i]['gst_amount_price'];
+    $result['order_status']       =$data[$i]['order_status'];
+    $result['waiter_mobile_no']       =$data[$i]['waiter_mobile_no'];
+    $result['customer_mobile_no']       =$data[$i]['customer_mobile_no'];
+    $result['customer_mobile_no']       =$data[$i]['customer_mobile_no'];
+    $result['create_slip_by']       =$data[$i]['create_slip_by'];
+    $result['order_complete_by']       =$data[$i]['order_complete_by'];
+    $result['order_delete_by']       =$data[$i]['order_delete_by'];
+    $result['date']       =$data[$i]['date'];
+    $result['modified_date']       =$data[$i]['modified_date'];
+    $result['slip_status']       =$data[$i]['slip_status'];
+    $result['payment_status']       =$data[$i]['payment_status'];
+    $result['notification_status_by_staff']       =$data[$i]['notification_status_by_staff'];
+    $result['NS_for_complete_by_waiter']       =$data[$i]['NS_for_complete_by_waiter'];
+    $result['NS_for_kot_for_staff']       =$data[$i]['NS_for_kot_for_staff'];
+    $result['NS_for_kitchen_for_staff']       =$data[$i]['NS_for_kitchen_for_staff'];
+    $result['NS_for_complete_by_chef']       =$data[$i]['NS_for_complete_by_chef'];
+    $result['NS_for_kitchen_for_waiter']       =$data[$i]['slip_status'];
+    $result['notification_status_by_customer']       =$data[$i]['notification_status_by_customer'];
+    $result['NS_for_complete_by_waiter_for_customer']       =$data[$i]['NS_for_complete_by_waiter_for_customer'];
+    $result['NS_for_kot_for_customer']       =$data[$i]['NS_for_kot_for_customer'];
+    $result['NS_for_kitchen_for_customer']       =$data[$i]['NS_for_kitchen_for_customer'];
+    $result['payment_by']       =$data[$i]['payment_by'];
+    $result['get_payment']       =$data[$i]['get_payment'];
+    $result['status']       =$data[$i]['status'];
+    $result['total_price']       =$data[$i]['total_price'];
+    $subOrderRes=$this->Supervisor->getSubOrder($data[$i]['order_id'],$admin_id);
+    if(!empty($subOrderRes))
+    {
+      foreach ($subOrderRes as $value)
+      {
+        $result2['order_id']     =$data[$i]['order_id'];
+        $result2['admin_id']     =$data[$i]['admin_id'];
+        $result2['sub_order_id']=$value['sub_order_id'];
+        $result2['menu_item_name']=$value['menu_item_name'];
+        $result2['quantity']=$value['quantity'];
+        $result2['half_and_full_status']=$value['half_and_full_status'];
+        $result2['menu_price']=$value['menu_price'];
+        $result2['total_item']       =$value['total_item'];
+        $result2['net_pay_amount']       =$value['net_pay_amount'];
+        $result2['gst_amount']       =$value['gst_amount'];
+        $result2['gst_amount_price']       =$value['gst_amount_price'];
+        $result2['order_status']       =$value['order_status'];
+        $result2['waiter_mobile_no']       =$value['waiter_mobile_no'];
+        $result2['customer_mobile_no']       =$value['customer_mobile_no'];
+        $result2['create_slip_by']       =$value['create_slip_by'];
+        $result2['order_complete_by']       =$value['order_complete_by'];
+        $result2['order_delete_by']       =$value['order_delete_by'];
+        $result2['date']       =$value['date'];
+        $result2['modified_date']       =$value['modified_date'];
+        $result2['slip_status']       =$value['slip_status'];
+        $result2['payment_status']       =$value['payment_status'];
+        $result2['notification_status_by_staff']       =$value['notification_status_by_staff'];
+        $result2['NS_for_complete_by_waiter']       =$value['NS_for_complete_by_waiter'];
+        $result2['NS_for_kot_for_staff']       =$value['NS_for_kot_for_staff'];
+        $result2['NS_for_kitchen_for_staff']       =$value['NS_for_kitchen_for_staff'];
+        $result2['NS_for_complete_by_chef']       =$value['NS_for_complete_by_chef'];
+        $result2['NS_for_kitchen_for_waiter']       =$value['slip_status'];
+        $result2['notification_status_by_customer']       =$value['notification_status_by_customer'];
+        $result2['NS_for_complete_by_waiter_for_customer']       =$value['NS_for_complete_by_waiter_for_customer'];
+        $result2['NS_for_kot_for_customer']       =$value['NS_for_kot_for_customer'];
+        $result2['NS_for_kitchen_for_customer']       =$value['NS_for_kitchen_for_customer'];
+        $result2['payment_by']       =$value['payment_by'];
+        $result2['get_payment']       =$value['get_payment'];
+        $result2['status']       =$value['status'];
+        $result2['total_price']       =$value['total_price'];
+        $finalarray[]=$result2;
+      }
+    }
+
+    $result['sub_order_data']     =$finalarray;
+    array_push($arr, $result);
+    $finalarray=array();
+
+  }
+  $response->data = $arr;
+
+}
+echo json_output($response);
+
+}
+
+/*.........get order status detail for Restaurant ---- */
 
 
 /*.........food tyoe api for  Restaurant ---- */
@@ -1882,22 +1959,19 @@ public function delete_order_for_restaurant_post()
 /*.........Update  payment status for restaurant---- */
 public function update_payment_for_customer_by_staff_post()
 {
-  $response               =new StdClass();
-  $result                 =new StdClass();
-  $order_id               =$this->input->post('order_id');
-  $admin_id               =$this->input->post('admin_id');
-  $payment_status         ='1';
-  $payment_by             =$this->input->post('payment_by');
-  $get_payment            =$this->input->post('get_payment');
-  $data->order_id         =$order_id;
-  $data->admin_id         =$admin_id;
-  $data->payment_status   =$payment_status;
-  $data->payment_by       =$payment_by;
-  $data->order_closed_by  =$payment_by;
-  // $data->get_payment      =$get_payment;
-  $res1 =$this->Supervisor->update_payment_status_by_staff($data,$get_payment);
-  $res2 =$this->Supervisor->update_payment_status_by_staff2($data,$get_payment);
-
+  $response   =   new StdClass();
+  $result       =  new StdClass();
+  $order_id =$this->input->post('order_id');
+  $admin_id =$this->input->post('admin_id');
+  $payment_status =$this->input->post('payment_status');
+  $payment_by =$this->input->post('payment_by');
+  $get_payment =$this->input->post('get_payment');
+  $data->order_id = $order_id;
+  $data->admin_id=$admin_id;
+  $data->payment_status=$payment_status;
+  $data->payment_by=$payment_by;
+  $data->get_payment=$get_payment;
+  $res1 = $this->Supervisor->update_payment_status_by_staff($data);
   if($order_id!='')
   {
     $data1->status = '1';
@@ -2031,7 +2105,7 @@ public function update_payment_for_customer_by_staff_post()
     $data1->device_id = $device_id;
     $data1->mobile_no=$mobile_no;
     $data1->otp=$otpValue;
-    $res3 = $this->Supervisor->send_otp($mobile_no,$otpValue);
+    $res = $this->Supervisor->send_otp('9956853945',$otpValue);
     if(!empty($mobile_no))
     {
      $res1 = $this->Supervisor->resend_otp($data1);
@@ -2282,32 +2356,10 @@ public function update_sub_order_by_waiter_post()
       'status'=>($sub_order_status=='Confirm'?'2':'0')
     );
     $result=$this->Supervisor->updateSubOrderByWaiter($order_array,$order_id,$admin_id,$sub_order_id);
-    $SubOrderTotalItemResult=$this->Supervisor->getSubOrderTotalItemPrice($order_id,$admin_id,$sub_order_id);
-    $menu_price=$SubOrderTotalItemResult[0]['menu_price'];
-    $quantity=$SubOrderTotalItemResult[0]['quantity'];
-     
-
-     $SubOrderPriceResult   =$this->Supervisor->getSubOrderPrice($order_id,$admin_id,$sub_order_id);
-     $total_item            =$SubOrderPriceResult[0]['total_item'];         
-     $total_price           =$SubOrderPriceResult[0]['total_price'];         
-     $net_pay_amount        =$SubOrderPriceResult[0]['net_pay_amount'];         
-     $gst_amount            =$SubOrderPriceResult[0]['gst_amount'];         
-     $gst_amount_price      =$SubOrderPriceResult[0]['gst_amount_price']; 
-
-     $netGst                =$menu_price*$gst_amount/100;
-
-
-     $subOrserArray=array('total_item'=>($total_item- $quantity),'total_price'=>($total_price-$menu_price),'gst_amount_price'=>($gst_amount_price-$netGst),'net_pay_amount'=>($net_pay_amount-$netGst));
-
-     $this->Supervisor->updateSubOrderAmount($subOrserArray,$order_id,$admin_id,$sub_order_id);
-
-
-
     if(!empty($result))
     {
      $this->Supervisor->deletedSubOrderWithMenu2($order_id,$admin_id,$sub_order_id);
      $arry['data']=array('status'=>'1','message'=>'Order placed successfully');
-
      $this->response($arry, 200);
    }else
    {
@@ -2444,14 +2496,13 @@ public function completeOrderByWaiter_post()
 
 public function generateInvoiceOrderBycashier_post()
 {
-  $arr    =array();
-  $arr2   =array(); 
-  $array  =array();
+  $arr=array();
+  $arr2=array();
+  $array=array();
   $arry=array();
-  $finalarray=array();
   $order_id=$this->input->post('order_id');
   $admin_id=$this->input->post('admin_id');
-  $cashier_mobile_no=$this->input->post('mobile_no');
+  $cashier_mobile_no=$this->input->post('cashier_mobile_no');
   $this->Supervisor->invoiceCreatedForOrders($order_id,$admin_id,$cashier_mobile_no);
   $this->Supervisor->invoiceCreatedForSubOrders($order_id,$admin_id,$cashier_mobile_no);
   $result=$this->Supervisor->getOrderForCashier($order_id,$admin_id);
@@ -2469,15 +2520,13 @@ public function generateInvoiceOrderBycashier_post()
         $menuquantity[]             =$menuValue['quantity'];
         $menuhalf_and_full_status[] =$menuValue['half_and_full_status'];
         $menumenu_price[]           =$menuValue['menu_price'];
-        $menu_item_gst[]            =$menuValue['gst'];
-        
+
       }
-      // print_r(implode(',',$menuImages).',');exit;
+                  // print_r(implode(',',$menuImages).',');exit;
       $arry['menu_item_name']=implode(',',$menuImages).',';
       $arry['quantity']=implode(',',$menuquantity).',';
       $arry['half_and_full_status']=implode(',',$menuhalf_and_full_status).',';
       $arry['menu_price']=implode(',',$menumenu_price).',';
-
       $arry['total_item']=$value['total_item'];
       $arry['net_pay_amount']=$value['net_pay_amount'];
       $arry['gst_amount']=$value['gst_amount'];
@@ -2486,8 +2535,6 @@ public function generateInvoiceOrderBycashier_post()
       $arry['payment_status']=$value['payment_status'];
       $arry['status']=$value['status'];
       $arry['total_price']=$value['total_price'];
-      $arry['discount']=$value['discount'];
-      $arry['menu_item_gst']=implode(',',$menu_item_gst).',';
       $result2=$this->Supervisor->getSubOrderForCashier($order_id);
       if(!empty($result2))
       {
@@ -2503,10 +2550,9 @@ public function generateInvoiceOrderBycashier_post()
             $menuquantity2[]             =$menuValue2['quantity'];
             $menuhalf_and_full_status2[] =$menuValue2['half_and_full_status'];
             $menumenu_price2[]           =$menuValue2['menu_price'];
-            $menu_item_gst2[]            =$menuValue2['gst'];
 
           } 
-          // print_r(implode(',',$menuImages2).',');exit;
+                                // print_r(implode(',',$menuImages2).',');exit;
           $arry2['table_no']=$value2['table_no'];
           $arry2['menu_item_name']=implode(',',$menuImages2).',';
           $arry2['quantity']=implode(',',$menuquantity2).',';
@@ -2520,19 +2566,16 @@ public function generateInvoiceOrderBycashier_post()
           $arry2['payment_status']=$value2['payment_status'];
           $arry2['status']=$value2['status'];
           $arry2['total_price']=$value2['total_price'];
-          $arry2['menu_item_gst']=implode(',',$menu_item_gst2).',';;
           $finalarray[]=$arry2;
           $menuImages2=array();
           $menuquantity2=array();
           $menuhalf_and_full_status2=array();
           $menumenu_price2=array();
-          $menu_item_gst2=array();
         }
         $menuImages=array();
         $menuquantity=array();
         $menuhalf_and_full_status=array();
         $menumenu_price=array();
-        $menu_item_gst=array();
       }
       $arry['sub_order']=$finalarray;
 
@@ -2543,12 +2586,12 @@ public function generateInvoiceOrderBycashier_post()
      $this->response($array, 200);
    }else
    {
-    $array=array('status'=>'0','data'=>array());
+    $array=array('status'=>'0','data'=>$arry);
     $this->response($array, 200);
   }
 }else
 {
-  $array=array('status'=>'0','data'=>array());
+  $array=array('status'=>'0','data'=>$arry);
   $this->response($array, 200);
 }
 }
@@ -2557,12 +2600,12 @@ public function deleteItemForOrder_post()
 {
   try
   {
-    $order_id     =$this->input->post('order_id');
-    $admin_id     =$this->input->post('admin_id');
-    $item_name    =$this->input->post('item_name');
-    $id           =$this->input->post('id');
-    
-   if(!empty($order_id)&&!empty($admin_id)&&!empty($id))
+    $order_id     =$this->inpu->post('order_id');
+    $admin_id     =$this->inpu->post('admin_id');
+    $item_name    =$this->inpu->post('item_name');
+    $id           =$this->inpu->post('id');
+
+    if(!empty($order_id)&&!empty($admin_id)&&!empty($id))
     {
 
       $result2=$this->Supervisor->getItemMenuOrderDetails($order_id,$admin_id);
@@ -2584,12 +2627,11 @@ public function deleteItemForOrder_post()
 
           $orderItemResult    =$this->Supervisor->getOrderItemPrice($order_id,$admin_id,$id);
           $menu_price         =$orderItemResult[0]['menu_price'];
-          $quantity           =$orderItemResult[0]['quantity'];
           $actualPrice        =$total_price-$menu_price;
           $actualNetPay       =$actualPrice+$actualPrice*$gst_amount/100;
           $actualGstAmountPrice =$actualPrice*$gst_amount/100;
           $updateArray        =array(
-            'total_item'=>$total_item-$quantity,
+            'total_item'=>$total_item-1,
             'total_price'=>$actualPrice,
             'net_pay_amount'=>$actualNetPay,     
             'gst_amount_price'=>$actualGstAmountPrice
@@ -2627,42 +2669,20 @@ public function deleteItemForSubOrder_post()
 {
   try
   {
-    $order_id     =$this->input->post('order_id');
-    $sub_order_id =$this->input->post('sub_order_id');
-    $admin_id     =$this->input->post('admin_id');
-    $item_name    =$this->input->post('item_name');
-    $id           =$this->input->post('id');
-    $mobile_no    =$this->input->post('mobile_no');
+    $order_id     =$this->inpu->post('order_id');
+    $sub_order_id =$this->inpu->post('sub_order_id');
+    $admin_id     =$this->inpu->post('admin_id');
+    $item_name    =$this->inpu->post('item_name');
+    $id           =$this->inpu->post('id');
     if(!empty($order_id)&&!empty($admin_id)&&!empty($id)&&!empty($sub_order_id))
     {
-         if(!empty($mobile_no))
-         {
-              $role=$this->Supervisor->getEmpRole($mobile_no,$admin_id);
 
-              if($role=='Supervisor')
-              {
-                $result2=$this->Supervisor->getItemMenuSubOrderDetails2($order_id,$admin_id,$sub_order_id);
-              }else
-              {
-                $result2=$this->Supervisor->getItemMenuSubOrderDetails($order_id,$admin_id,$sub_order_id);
-              }
-            
-         }else
-         {
           $result2=$this->Supervisor->getItemMenuSubOrderDetails($order_id,$admin_id,$sub_order_id);
-         }
-          
           if(!empty($result2))
           {
-	      $result=$this->Supervisor->cancelSubOrderItem($order_id,$admin_id,$item_name,$sub_order_id,$id);
 
-              $CheckItem=$this->Supervisor->checkSubOrderItem($order_id,$admin_id,$sub_order_id);
 
-              if(empty($CheckItem))
-              {
-                $this->Supervisor->RejectSubOrder($order_id,$admin_id,$sub_order_id,$mobile_no,$id);
-              }
-              
+              $result=$this->Supervisor->cancelSubOrderItem($order_id,$admin_id,$item_name,$sub_order_id,$id);
 
               if(!empty($result))
               {
@@ -2674,19 +2694,19 @@ public function deleteItemForSubOrder_post()
                     $gst_amount         =$orderResult[0]['gst_amount'];
                     $gst_amount_price   =$orderResult[0]['gst_amount_price'];
 
+
                     $orderItemResult    =$this->Supervisor->getSubOrderItemPrice($order_id,$admin_id,$id,$sub_order_id);
                     $menu_price         =$orderItemResult[0]['menu_price'];
-                     $quantity          =$orderItemResult[0]['quantity'];
                     $actualPrice        =$total_price-$menu_price;
                     $actualNetPay       =$actualPrice+$actualPrice*$gst_amount/100;
                     $actualGstAmountPrice =$actualPrice*$gst_amount/100;
                     $updateArray        =array(
-                      'total_item'=>$total_item-$quantity,
+                      'total_item'=>$total_item-1,
                       'total_price'=>$actualPrice,
                       'net_pay_amount'=>$actualNetPay,     
                       'gst_amount_price'=>$actualGstAmountPrice
                     );
-                $this->Supervisor->updateMenuSubListDetails($updateArray,$order_id,$admin_id,$sub_order_id);
+                    $this->Supervisor->updateMenuSubListDetails($updateArray,$order_id,$admin_id,$sub_order_id);
                 $arry['data']=array('status'=>'1','message'=>'Item cancelled');
                 $this->response($arry, 200);
               }else
@@ -2712,251 +2732,4 @@ public function deleteItemForSubOrder_post()
     $this->response($error, 200);
   }
 }
-public function discountForCustomer_post()
-{
-    try
-    {
-      $order_id     =$this->input->post('order_id');
-      $admin_id     =$this->input->post('admin_id');
-      $mobile_no    =$this->input->post('mobile_no');
-      $discount     =$this->input->post('discount');
-      $array        =array('discount'=>$discount,'discount_by'=>$mobile_no);
-      $result       =$this->Supervisor->offerDiscount($order_id,$admin_id,$array);
-      if(!empty($result))
-      {
-         $arry['data']=array('status'=>'1','message'=>'success');
-          $this->response($arry, 200);
-      }else
-      {
-           $arry['data']=array('status'=>'0','message'=>'failed');
-          $this->response($arry, 200);
-      }
-    }catch(Ececption $e)
-    {
-      echo $e->getMessage();
-      $error = array('status' =>'0', "message" => "Internal Server Error - Please try Later.","StatusCode"=> "HTTP405");
-      $this->response($error, 200);
-
-    }
-    
-  }
-  public function get_order_detail_by_date_for_restaurant_post()
-{
-
-  $response         =new StdClass();
-  $result           =array();
-  $result2          =array();
-  $finalarray       =array();
-  $arr = array();
-  $arr2 = array();
-  $menuImages = array();
-  $menuquantity = array();
-  $menuhalf_and_full_status = array();
-  $menumenu_price = array();
-  $start_date       =$this->input->post('start_date');
-  $end_date         =$this->input->post('end_date');
-  $admin_id         =$this->input->post('admin_id');
-  $data = $this->Supervisor->getGroupDataFromDateWise($admin_id,$start_date,$end_date);
-  if(empty($data))
-  {
-    $response->status = 0;
-    $response->message = "failed";
-
-  }
-  else
-  {
-   $response->status = 1;
-   $response->message = "success";
-   for($i=0;$i<count($data);$i++)
-   {
-    // $result['id']           =$data[$i]['id'];
-    $result['order_id']     =$data[$i]['order_id'];
-    $result['table_no']     =$data[$i]['table_no'];
-    $result['order_status'] =$data[$i]['order_status'];
-    $result['admin_id']     =$data[$i]['admin_id'];
-    $menuResult =$this->Supervisor->getMenuItemForOrder($data[$i]['order_id'],$admin_id);
-
-    foreach($menuResult as $menuValue)
-    {
-      $menuImages[]               =$menuValue['menu_item_name'];
-      $menuquantity[]             =$menuValue['quantity'];
-      $menuhalf_and_full_status[] =$menuValue['half_and_full_status'];
-      $menumenu_price[]           =$menuValue['menu_price'];
-      $menumenu_id[]              =$menuValue['id'];
-      $menumenu_status[]          =$menuValue['status'];
-      $menu_order_id[]            =$data[$i]['order_id'];
-      $menu_order_table[]         =$data[$i]['table_no'];
-      $main_order_status[]        =$data[$i]['status'];
-
-    }
-                // print_r(implode(',',$menuImages).',');exit;
-    $result['menu_order_id']                =implode(',',$menu_order_id).',';
-    $result['menu_order_table']                =implode(',',$menu_order_table).',';
-    $result['id']                =implode(',',$menumenu_id).',';
-    $result['menu_item_name']       =implode(',',$menuImages).',';
-    $result['item_status']       =implode(',',$menumenu_status).',';
-                // $result['menu_item_name']       =$data[$i]['menu_item_name'];
-    $result['cus_id']       =$data[$i]['cus_id'];
-    $result['quantity']       =implode(',',$menuquantity).',';
-    $result['half_and_full_status']       =implode(',',$menuhalf_and_full_status).',';
-    $result['main_order_status']       =implode(',',$main_order_status).',';
-    $result['menu_price']       =implode(',',$menumenu_price).',';
-    $result['total_item']       =$data[$i]['total_item'];
-    $result['net_pay_amount']       =$data[$i]['net_pay_amount'];
-    $result['gst_amount']       =$data[$i]['gst_amount'];
-    $result['gst_amount_price']       =$data[$i]['gst_amount_price'];
-    $result['order_status']       =$data[$i]['order_status'];
-    $result['waiter_mobile_no']       =$mobile_no;
-    $result['customer_mobile_no']       =$data[$i]['customer_mobile_no'];
-    $result['create_slip_by']       =$data[$i]['create_slip_by'];
-    $result['order_complete_by']       =$data[$i]['order_complete_by'];
-    $result['order_delete_by']       =$data[$i]['order_delete_by'];
-    $result['date']       =$data[$i]['date'];
-    $result['modified_date']       =$data[$i]['modified_date'];
-    $result['slip_status']       =$data[$i]['slip_status'];
-    $result['payment_status']       =$data[$i]['payment_status'];
-    $result['notification_status_by_staff']       =$data[$i]['notification_status_by_staff'];
-    $result['NS_for_complete_by_waiter']       =$data[$i]['NS_for_complete_by_waiter'];
-    $result['NS_for_kot_for_staff']       =$data[$i]['NS_for_kot_for_staff'];
-    $result['NS_for_kitchen_for_staff']       =$data[$i]['NS_for_kitchen_for_staff'];
-    $result['NS_for_complete_by_chef']       =$data[$i]['NS_for_complete_by_chef'];
-    $result['NS_for_kitchen_for_waiter']       =$data[$i]['slip_status'];
-    $result['notification_status_by_customer']       =$data[$i]['notification_status_by_customer'];
-    $result['NS_for_complete_by_waiter_for_customer']       =$data[$i]['NS_for_complete_by_waiter_for_customer'];
-    $result['NS_for_kot_for_customer']       =$data[$i]['NS_for_kot_for_customer'];
-    $result['NS_for_kitchen_for_customer']       =$data[$i]['NS_for_kitchen_for_customer'];
-    $result['payment_by']       =$data[$i]['payment_by'];
-    $result['get_payment']       =$data[$i]['get_payment'];
-    $result['status']       =$data[$i]['status'];
-    $result['total_price']       =$data[$i]['total_price'];
-    $result['discount']           =$data[$i]['discount'];
-
-    $subOrderRes=$this->Supervisor->getSubOrder($data[$i]['order_id'],$admin_id);
-    if(!empty($subOrderRes))
-    {
-      foreach ($subOrderRes as $value)
-      {
-        $result2['order_id']     =$data[$i]['order_id'];
-        $result2['admin_id']     =$data[$i]['admin_id'];
-        $result2['sub_order_id'] =$value['sub_order_id'];
-        $menuResult2 =$this->Supervisor->getMenuItemForSubOrder($data[$i]['order_id'],$admin_id,$result2['sub_order_id']);
-        foreach($menuResult2 as $menuValue2)
-        {
-          $menuImages2[]               =$menuValue2['menu_item_name'];
-          $menuquantity2[]             =$menuValue2['quantity'];
-          $menuhalf_and_full_status2[] =$menuValue2['half_and_full_status'];
-          $menumenu_price2[]           =$menuValue2['menu_price'];
-          $menu_id[]                   =$menuValue2['id'];
-          $order_data[]                =$data[$i]['order_id'];
-          $sub_order_id[]              =$value['sub_order_id'];
-          $sub_order_status[]          =$menuValue2['status'];
-          $main_sub_order_status[]     =$value['status'];
-
-        } 
-                    // print_r(implode(',',$menuImages2).',');exit;
-        $result2['menu_item_name']=implode(',',$menuImages2).',';
-        $result2['order_data_id']=implode(',',$order_data).',';
-        $result2['sub_order_data_array']=implode(',',$sub_order_id).',';
-        $result2['sub_order_status']=implode(',',$sub_order_status).',';
-        $result2['menu_item_id']=implode(',',$menu_id).',';
-                    // $result2['menu_item_name']=$value['menu_item_name'];
-        $result2['quantity']=implode(',',$menuquantity2).',';
-        $result2['half_and_full_status']=implode(',',$menuhalf_and_full_status2).',';
-        $result2['main_sub_order_status']=implode(',', $main_sub_order_status).',';
-        $result2['menu_price']=implode(',',$menumenu_price2).',';
-        $result2['total_item']       =$value['total_item'];
-        $result2['net_pay_amount']       =$value['net_pay_amount'];
-        $result2['gst_amount']       =$value['gst_amount'];
-        $result2['gst_amount_price']       =$value['gst_amount_price'];
-        $result2['order_status']       =$value['order_status'];
-        $result2['waiter_mobile_no']       =$value['waiter_mobile_no'];
-        $result2['customer_mobile_no']       =$value['customer_mobile_no'];
-        $result2['create_slip_by']       =$value['create_slip_by'];
-        $result2['order_complete_by']       =$value['order_complete_by'];
-        $result2['order_delete_by']       =$value['order_delete_by'];
-        $result2['date']       =$value['date'];
-        $result2['modified_date']       =$value['modified_date'];
-        $result2['slip_status']       =$value['slip_status'];
-        $result2['payment_status']       =$value['payment_status'];
-        $result2['notification_status_by_staff']       =$value['notification_status_by_staff'];
-        $result2['NS_for_complete_by_waiter']       =$value['NS_for_complete_by_waiter'];
-        $result2['NS_for_kot_for_staff']       =$value['NS_for_kot_for_staff'];
-        $result2['NS_for_kitchen_for_staff']       =$value['NS_for_kitchen_for_staff'];
-        $result2['NS_for_complete_by_chef']       =$value['NS_for_complete_by_chef'];
-        $result2['NS_for_kitchen_for_waiter']       =$value['slip_status'];
-        $result2['notification_status_by_customer']       =$value['notification_status_by_customer'];
-        $result2['NS_for_complete_by_waiter_for_customer']       =$value['NS_for_complete_by_waiter_for_customer'];
-        $result2['NS_for_kot_for_customer']       =$value['NS_for_kot_for_customer'];
-        $result2['NS_for_kitchen_for_customer']       =$value['NS_for_kitchen_for_customer'];
-        $result2['payment_by']       =$value['payment_by'];
-        $result2['get_payment']       =$value['get_payment'];
-        $result2['status']       =$value['status'];
-        $result2['total_price']       =$value['total_price'];
-        $result2['table_no']     = $data[$i]['table_no'];
-        $finalarray[]=$result2;
-        $menuImages2=array();
-        $menuquantity2=array();
-        $menuhalf_and_full_status2=array();
-        $menumenu_price2=array();
-        //$menumenu_status=array();
-        $menu_id=array();
-        $order_data=array();
-        $sub_order_id=array();
-        $sub_order_status=array();
-        $main_sub_order_status=array();
-      }
-
-    }
-    $result['sub_order_data']     =$finalarray;
-    array_push($arr, $result);
-    $finalarray=array();
-    $menuImages=array();
-    $menuquantity=array();
-    $menuhalf_and_full_status=array();
-    $menumenu_price=array();
-    $menumenu_id=array();
-    $menu_order_id=array();
-    $menu_order_table=array();
-    $menumenu_status=array();
-    $main_order_status=array();
-
-  }
-  $response->data = $arr;
-
-}
-echo json_output($response);
-}
-
-public function getMasterCategory_post()
-{
-
-  try
-  {
-      $admin_id=$this->input->post('admin_id');
-      if(!empty($admin_id))
-      {
-        $result=$this->Supervisor->getMasterCategory($admin_id);
-        if(!empty($result))
-        {
-          $arry=array('status'=>'1','data'=>$result);
-          $this->response($arry, 200);
-        }else
-        {
-          $arry=array('status'=>'0','data'=>'failed');
-          $this->response($arry, 200);
-        }
-
-      }else
-      {
-        $arry=array('status'=>'0','data'=>'failed');
-        $this->response($arry, 200);
-      }
-  }catch(Ecception $e)
-  {
-      $e->getMessage();
-        $error = array('status' =>'0', "data" => "Internal Server Error - Please try Later.","StatusCode"=> "HTTP405");
-        $this->response($error, 200);
-  }
-}
-
 }

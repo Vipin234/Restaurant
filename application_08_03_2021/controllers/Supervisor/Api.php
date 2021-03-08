@@ -2469,7 +2469,6 @@ public function generateInvoiceOrderBycashier_post()
         $menuquantity[]             =$menuValue['quantity'];
         $menuhalf_and_full_status[] =$menuValue['half_and_full_status'];
         $menumenu_price[]           =$menuValue['menu_price'];
-        $menu_item_gst[]            =$menuValue['gst'];
         
       }
       // print_r(implode(',',$menuImages).',');exit;
@@ -2477,7 +2476,6 @@ public function generateInvoiceOrderBycashier_post()
       $arry['quantity']=implode(',',$menuquantity).',';
       $arry['half_and_full_status']=implode(',',$menuhalf_and_full_status).',';
       $arry['menu_price']=implode(',',$menumenu_price).',';
-
       $arry['total_item']=$value['total_item'];
       $arry['net_pay_amount']=$value['net_pay_amount'];
       $arry['gst_amount']=$value['gst_amount'];
@@ -2487,7 +2485,6 @@ public function generateInvoiceOrderBycashier_post()
       $arry['status']=$value['status'];
       $arry['total_price']=$value['total_price'];
       $arry['discount']=$value['discount'];
-      $arry['menu_item_gst']=implode(',',$menu_item_gst).',';
       $result2=$this->Supervisor->getSubOrderForCashier($order_id);
       if(!empty($result2))
       {
@@ -2503,7 +2500,6 @@ public function generateInvoiceOrderBycashier_post()
             $menuquantity2[]             =$menuValue2['quantity'];
             $menuhalf_and_full_status2[] =$menuValue2['half_and_full_status'];
             $menumenu_price2[]           =$menuValue2['menu_price'];
-            $menu_item_gst2[]            =$menuValue2['gst'];
 
           } 
           // print_r(implode(',',$menuImages2).',');exit;
@@ -2520,19 +2516,16 @@ public function generateInvoiceOrderBycashier_post()
           $arry2['payment_status']=$value2['payment_status'];
           $arry2['status']=$value2['status'];
           $arry2['total_price']=$value2['total_price'];
-          $arry2['menu_item_gst']=implode(',',$menu_item_gst2).',';;
           $finalarray[]=$arry2;
           $menuImages2=array();
           $menuquantity2=array();
           $menuhalf_and_full_status2=array();
           $menumenu_price2=array();
-          $menu_item_gst2=array();
         }
         $menuImages=array();
         $menuquantity=array();
         $menuhalf_and_full_status=array();
         $menumenu_price=array();
-        $menu_item_gst=array();
       }
       $arry['sub_order']=$finalarray;
 

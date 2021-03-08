@@ -420,7 +420,6 @@ require APPPATH . 'libraries/REST_Controller.php';
         {  
 
                     $menu_item_array      =explode(",",rtrim($menu_item_name,","));
-                    $gst_amount_array     =explode(",",rtrim($gst_amount,","));
                     $menu_price           =explode(",",rtrim($menu_price,","));
                     $quantity             =explode(",",rtrim($quantity,","));
                     $half_and_full_status =explode(",",rtrim($half_and_full_status,","));
@@ -432,13 +431,11 @@ require APPPATH . 'libraries/REST_Controller.php';
                             $insert_array[]=array(
                                             'menu_item_name'=>$menu_item_array[$i],
                                             'quantity'=>$quantity[$i],
-                                            // 'half_and_full_status'=>$half_and_full_status[$i],
-                                            'half_and_full_status'=>$half_and_full_status[$i]=='FF'?'F':$half_and_full_status[$i],
+                                            'half_and_full_status'=>$half_and_full_status[$i],
                                             'menu_price'=>$menu_price[$i],
                                             'order_id'=>$alphanumerric,
                                             'status'=>'1',
                                             'admin_id'=>$admin_id,
-                                            'gst'=>$gst_amount_array[$i],
                                             'creation_date'=>date('Y-m-d H:s:i')
                                               );
                           
@@ -535,8 +532,6 @@ require APPPATH . 'libraries/REST_Controller.php';
               $menu_price           =explode(",",rtrim($menu_price,","));
               $quantity             =explode(",",rtrim($quantity,","));
               $half_and_full_status =explode(",",rtrim($half_and_full_status,","));
-              $gst_amount_array     =explode(",",rtrim($gst_amount,","));
-
 
              for($i=0;$i<count($menu_item_array);$i++)
               {
@@ -550,7 +545,6 @@ require APPPATH . 'libraries/REST_Controller.php';
                                 'order_id'=>$order_id,
                                 'status'=>'1',
                                 'admin_id'=>$admin_id,
-                                'gst'=>$gst_amount_array[$i],
                                 'creation_date'=>date('Y-m-d H:s:i')
                                 );
               
@@ -626,6 +620,8 @@ require APPPATH . 'libraries/REST_Controller.php';
               $result['table_no']                                     =$data[$i]['table_no'];
               $result['total_price']                                  =$data[$i]['total_price'];
               $result['net_pay_amount']                               =$data[$i]['net_pay_amount'];
+              $result['gst_amount']                                   =$data[$i]['gst_amount'];
+              $result['gst_amount_price']                             =$data[$i]['gst_amount_price'];
               $result['order_status']                                 =$data[$i]['order_status'];
               $result['waiter_mobile_no']                             =$data[$i]['waiter_mobile_no'];
               $result['customer_mobile_no']                           =$data[$i]['customer_mobile_no'];
@@ -657,63 +653,31 @@ require APPPATH . 'libraries/REST_Controller.php';
               $result['discount']                                     =$data[$i]['discount'];
               $OrderCalulationResult                                  =$this->Customer->getOrderCalculation($data[$i]['order_id'],$data[$i]['admin_id']);
              // print_r($OrderCalulationResult);
-              $totalAmount=0;
-              $totalGstAmount=0;
-              $totalqty=0;
-              $totalGst=0;
-              foreach($OrderCalulationResult as $gstCalulation)
-              {
-
-                $totalAmount=$totalAmount+$gstCalulation['menu_price'];
-                $totalGstAmount=$totalGstAmount+$gstCalulation['menu_price']*$gstCalulation['quantity']*$gstCalulation['gst']/100;
-                $totalqty=$totalqty+$gstCalulation['quantity'];
-                $totalGst=$totalGst+$gstCalulation['gst'];
-
-              }
-
-              $totalNetPayableAmount                                     =$totalAmount;
-              $result['gst_amount']                                      ="$totalGst";
-              $result['gst_amount_price']                                ="$totalGstAmount";
-
-              
+              $totalAmount                                            =$OrderCalulationResult[0]['menu_price'];
+              $totalqty                                               =$OrderCalulationResult[0]['quantity'];
+              $totalNetPayableAmount                                  =$totalAmount+($totalAmount*$data[$i]['gst_amount']/100);
+              $totalGstAmount                                         =($totalAmount*$data[$i]['gst_amount']/100);
 
               $subOrderRes                                            =$this->Customer->getSubOrder($data[$i]['order_id'],$data[$i]['admin_id']);
                if(!empty($subOrderRes))
                   {
                     $subtotalAmount=0;
                     $subtotalqty =0;
-                    $subtotalNetPayableAmount=0;  
+                    $subtotalNetPayableAmount=0;
                     $subtotalGstAmount=0;
                     foreach ($subOrderRes as $value)
                     {
                       $result2['order_id']                              =$data[$i]['order_id'];
                       $result2['admin_id']                              =$data[$i]['admin_id'];
                       $result2['sub_order_id']                          =$value['sub_order_id'];
-                     
+                      $result2['gst_amount']                            =$value['gst_amount'];
 
                       $SubOrderCalulationResult                         =$this->Customer->getSubOrderCalculation($data[$i]['order_id'],$data[$i]['admin_id'],$value['sub_order_id']);
                       //print_r($SubOrderCalulationResult);
-                      $subtotalAmount=0;
-                      $subtotalGstAmount=0;
-                      $subtotalqty=0;
-                      $totalSubGst=0;
-                       foreach($SubOrderCalulationResult as $SubgstCalulation)
-                        {
-                            
-                        $subtotalAmount=$subtotalAmount+$SubgstCalulation['menu_price'];
-
-                        $subtotalGstAmount=$subtotalGstAmount+$SubgstCalulation['menu_price']*$SubgstCalulation['quantity']*$SubgstCalulation['gst']/100;
-                        $subtotalqty=$subtotalqty+$SubgstCalulation['quantity'];
-
-                        $totalSubGst=$totalSubGst+$SubgstCalulation['gst'];
-
-                        }
-
-                      $subtotalAmount               =$subtotalAmount;
-                      $subtotalqty                  =$subtotalqty;
-                      $subtotalNetPayableAmount     =$subtotalNetPayableAmount+$subtotalAmount+$subtotalGstAmount;
-                      // $subtotalGstAmount            =$subtotalGstAmount;
-                      
+                      $subtotalAmount            =$subtotalAmount+$SubOrderCalulationResult[0]['menu_price'];
+                      $subtotalqty               =$subtotalqty+$SubOrderCalulationResult[0]['quantity'];
+                      $subtotalNetPayableAmount  =$subtotalNetPayableAmount+$subtotalAmount+($subtotalAmount*$value['gst_amount']/100);
+                      $subtotalGstAmount         =$subtotalGstAmount+($subtotalAmount*$value['gst_amount']/100);
                       
 
 
@@ -729,7 +693,7 @@ require APPPATH . 'libraries/REST_Controller.php';
                         $menuSubOrderStatus[]                           =$menuValue2['status'];
 
                       } 
-                      $result2['gst_amount']                            ="$totalSubGst";
+              
                       $result2['menu_item_name']                        =implode(',',$menuImages2).',';
                       $result2['menu_item_id']                          =implode(',',$menu_id).',';
                       $result2['quantity']                              =implode(',',$menuquantity2).',';
@@ -738,7 +702,7 @@ require APPPATH . 'libraries/REST_Controller.php';
                       $result2['menuSubOrderItemStatus']                =implode(',',$menuSubOrderStatus).',';
                       $result2['total_item']                            =$value['total_item'];
                       $result2['net_pay_amount']                        =$value['net_pay_amount'];
-                      $result2['gst_amount_price']                      ="$subtotalGstAmount";
+                      $result2['gst_amount_price']                      =$value['gst_amount_price'];
                       $result2['order_status']                          =$value['order_status'];
                       $result2['waiter_mobile_no']                      =$value['waiter_mobile_no'];
                       $result2['customer_mobile_no']                    =$value['customer_mobile_no'];
@@ -763,8 +727,6 @@ require APPPATH . 'libraries/REST_Controller.php';
                       $result2['get_payment']                           =$value['get_payment'];
                       $result2['status']                                =$value['status'];
                       $result2['total_price']                           =$value['total_price'];
-                      
-
                       $finalarray[]=$result2;
                       $menuImages2=array();
                       $menuquantity2=array();
@@ -773,7 +735,10 @@ require APPPATH . 'libraries/REST_Controller.php';
                       $menu_id=array();
                       $menuSubOrderStatus=array();
                     }
-              
+                    // $subtotalAmount='';
+                    // $subtotalqty='';
+                    // $subtotalNetPayableAmount='';
+                    // $subtotalGstAmount='';
                   }
                   $result['sub_order_data']     =$finalarray;
                   $result['totalOfOrderamount'] =($subtotalAmount+$totalAmount);
@@ -1001,47 +966,34 @@ require APPPATH . 'libraries/REST_Controller.php';
         $menu_list = $this->Customer->get_menu_list_data($admin_id);
         if(!empty($menu_list))
         {
-
          foreach ($menu_list as $row)
            {
-             $gst       =$this->Supervisor->getGst($row['menu_category_id'],$admin_id);
-
             $menuhalfprice=$row['menu_half_price'];
-
             if(!empty($menuhalfprice))
             {
               $menu_half_price=$row['menu_half_price'];
-              $menu_half_price_gst =($menu_half_price)*$gst/100;
-
             }
             else
             {
               $menu_half_price='';
-               $menu_half_price_gst='';
             }
             $menufullprice=$row['menu_full_price'];
             if(!empty($menufullprice))
             {
               $menu_full_price=$row['menu_full_price'];
-              $menu_full_price_gst =($menu_full_price)*$gst/100;
-
             }
             else
             {
               $menu_full_price='';
-              $menu_full_price_gst='';
             }
             $menufixprice=$row['menu_fix_price'];
             if(!empty($menufixprice))
             {
               $menu_fix_price=$row['menu_fix_price'];
-              $menu_fix_price_gst =($menu_fix_price)*$gst/100;
-
             }
             else
             {
               $menu_fix_price='';
-              $menu_fix_price_gst='';
             }
             $nutrientcounts=$row['nutrient_counts'];
           if(!empty($nutrientcounts))
@@ -1056,19 +1008,12 @@ require APPPATH . 'libraries/REST_Controller.php';
             $data['menu_id'] =   $row['menu_id'];
             $data['admin_id'] =   $row['admin_id'];
             $data['menu_name'] =   $row['menu_name'];
-           
             $data['menu_image'] =   base_url().'uploads/'.$row['menu_image'];
             $data['menu_detail'] =   $row['menu_detail'];
             $data['menu_half_price'] =   $menu_half_price;
             $data['menu_full_price'] =  $menu_full_price;
             $data['menu_fix_price'] =   $menu_fix_price;
             $data['nutrient_counts'] =   $nutrient_counts;
-            $data['gst'] =  "$gst";
-            $data['menu_half_price_gst'] = "$menu_half_price_gst";
-            $data['menu_full_price_gst'] = "$menu_full_price_gst";
-            $data['menu_fix_price_gst'] =  "$menu_fix_price_gst";
-            
-          
             $data['message'] = 'Success';
             $data['status']  ='1';
 
@@ -1798,19 +1743,18 @@ require APPPATH . 'libraries/REST_Controller.php';
         }
 
       /*.........super sub Category   Api For hawker  ---- */
-  public function GenrateRSA_post()
+  public function pamentTxns_post()
   {
     try
     {
 
        $order_id=$this->input->post('order_id');
-       $path=APPPATH."libraries/cacert.pem";
+       $path=FCPATH."libraries/cacert.pem";
+       
         if(!empty($order_id))
         {
             $result=paymentTransaction($order_id,$path);
-            $arry['data']=array('status'=>'1','message'=>$result);
-            $this->response($arry, 200);
-            // print_r($result);exit;
+            print_r($result);exit;
         }else
         {
           $arry['data']=array('status'=>'0','message'=>'failed');
@@ -1818,63 +1762,11 @@ require APPPATH . 'libraries/REST_Controller.php';
         }
     }catch(Exception $e)
     {
-      echo $e->getMessage(); 
+      echo $e->getMessage();
       $error = array('status' =>'0', "message" => "Internal Server Error - Please try Later.","StatusCode"=> "HTTP405");
       $this->response($error, 200);
     }
    
   }
 
-  public function ccAvenueResponseHandler_post()
-  {
-     try
-     {
-      $working_key=$this->config->item('working_key');
-      $encResponse=$_POST["encResp"];
-      $data['response']=array(
-                'working_key'  =>$working_key,
-                'encResp'      =>$encResponse
-          );
-      // print_r($data);exit;
-      $this->load->view('ccavResponseHandler',$data);
-     }catch(Ecception $e)
-     {
-        $e->getMessage();
-        $error = array('status' =>'0', "message" => "Internal Server Error - Please try Later.","StatusCode"=> "HTTP405");
-        $this->response($error, 200);
-
-     }
-      
   }
-
-  public function getCCavenuParameter_get()
-  {
-    try
-    {
-    $working_key=$this->config->item('working_key');
-    $access_code=$this->config->item('access_code');
-    $merchant_id=$this->config->item('merchant_id');
-    $array=array(
-              'working_key'=>$working_key,
-              'access_code'=>$access_code,
-              'merchant_id'=>$merchant_id
-              );
-            if(!empty($array))
-            {
-                  $arry=array('status'=>'1','data'=>$array);
-                  $this->response($arry, 200);
-            }else
-            {
-                  $arry['data']=array('status'=>'0','data'=>'failed');
-                  $this->response($arry, 200);
-            }
-    }catch(Ecception $e)
-    {
-        $e->getMessage();
-        $error = array('status' =>'0', "message" => "Internal Server Error - Please try Later.","StatusCode"=> "HTTP405");
-        $this->response($error, 200);
-    }
-    
-  }
-
-}
