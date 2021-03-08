@@ -22,6 +22,7 @@ if(isset($_POST['create'])){
   $half_price     = $_POST['half-price'];
   $full_price     = $_POST['full-price'];
   $price          = $_POST['price'];
+  $item_category  = $_POST['item_category'];
   $date           = date('Y-m-d H:i:s');
   $name = $_FILES['image']['name'];
   $size = $_FILES['image']['size'];
@@ -36,11 +37,11 @@ if(isset($_POST['create'])){
   file_put_contents($file, $image_base64);
   if($menu_price == 'fixedPrice')
   {
-  $qry = "INSERT INTO `tbl_restaurant_menu_item_list`(`admin_id`, `menu_food_type`,`menu_price_type`, `menu_name`, `menu_image`, `menu_detail`, `menu_fix_price`, `create_date`,`status`) VALUES ('$adminid','$food_type','$menu_price','$menu_name','$image','$menu_detail','$price','$date',1)";
+  $qry = "INSERT INTO `tbl_restaurant_menu_item_list`(`admin_id`, `menu_food_type`,`menu_price_type`, `menu_name`, `menu_image`, `menu_detail`, `menu_fix_price`, `create_date`,`status`,`menu_category_id`) VALUES ('$adminid','$food_type','$menu_price','$menu_name','$image','$menu_detail','$price','$date',1,'$item_category')";
   }
   elseif($menu_price == 'half-fullPrice')
   {
-    $qry = "INSERT INTO `tbl_restaurant_menu_item_list`(`admin_id`, `menu_food_type`,`menu_price_type`, `menu_name`, `menu_image`, `menu_detail`, `menu_half_price`,`menu_full_price`, `create_date`,`status`) VALUES ('$adminid','$food_type','$menu_price','$menu_name','$image','$menu_detail','$half_price','$full_price','$date',1)";
+    $qry = "INSERT INTO `tbl_restaurant_menu_item_list`(`admin_id`, `menu_food_type`,`menu_price_type`, `menu_name`, `menu_image`, `menu_detail`, `menu_half_price`,`menu_full_price`, `create_date`,`status`,`menu_category_id`) VALUES ('$adminid','$food_type','$menu_price','$menu_name','$image','$menu_detail','$half_price','$full_price','$date',1,'$item_category')";
   }
   //echo $qry;exit;
   $run = mysqli_query($conn,$qry);
@@ -272,7 +273,26 @@ if(isset($_POST['create'])){
                           <input id="email" class="form-control" name="full-price" type="number">
                         </div>
                       </div>
+                       
                     </div>  
+                    <div class="item form-group">
+                        <label class="col-form-label col-md-3 col-sm-3 label-align"><b>Item Category</b>                        </label>
+                        <div class="col-md-6 col-sm-6 ">
+                         <select name="item_category" class="col-form-label col-md-12 col-sm-12 label-align" required="">
+                          <option value="">Select item category</option>
+                           <?php
+                              $string="select * from master_item_category where status=1";
+                              $query=mysqli_query($conn,$string);
+                              while($row=mysqli_fetch_assoc($query))
+                              {?>
+                                <option value="<?php echo $row['id'];?>"><?php echo $row['category_name'];?></option>
+                              <?php
+                            }
+
+                           ?>
+                         </select>
+                        </div>
+                      </div>
                       <div class="item form-group">
                         <label class="col-form-label col-md-3 col-sm-3 label-align"><b>Image</b> <span class="required">*</span>
                         </label>

@@ -171,7 +171,9 @@ else
                           <th>Details</th>
                           <th>Food Type</th>
                           <th>Price Type</th>
+                           <th>GST</th>
                           <th>Fixed Price</th>
+                         
                           <th>Half Price / Full Price</th>
                           <th>Image</th>
                           <th>Create Date</th>
@@ -180,12 +182,25 @@ else
                       </thead>
                       <tbody>
                         <?php while($fetchdata = mysqli_fetch_array($run)){
+
+                          $category_id=$fetchdata['menu_category_id'];
+
+                          $string="select gst from master_item_category where id='$category_id' and status=1";
+
+                          $query=mysqli_query($conn,$string);
+
+                          $fetch=mysqli_fetch_assoc($query);
+
+                          $gst=$fetch['gst'];
+
+
                         ?>
                         <tr>
                           <td><?php echo $fetchdata['menu_name'];?></td>
                           <td><?php echo $fetchdata['menu_detail'];?></td>
                           <td><?php echo $fetchdata['menu_food_type'];?></td>
                           <td><?php echo $fetchdata['menu_price_type'];?></td>
+                          <td><?php echo $gst;?></td>
                           <td><?php if($fetchdata['menu_fix_price'] != ''){ echo $fetchdata['menu_fix_price'];}else{echo "Null";}?></td>
                           <td><?php if($fetchdata['menu_half_price'] ||  $fetchdata['menu_half_price'] != ''){ echo $fetchdata['menu_half_price']."/".$fetchdata['menu_full_price'];}else{echo "Null";}?></td>
                           

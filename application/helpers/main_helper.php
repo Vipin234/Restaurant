@@ -50,6 +50,7 @@ function json_output($data)
               $postvars.= $sep.urlencode($key).'='.urlencode($value);
               $sep='&';
       }
+    	//print_r($pemurl);exit;
       $ch = curl_init();
       curl_setopt($ch,CURLOPT_URL,$url);
       curl_setopt($ch,CURLOPT_POST,count($fields));
