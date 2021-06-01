@@ -1,0 +1,9 @@
+<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+
+ERROR - 2021-03-22 00:15:40 --> Severity: error --> Exception: syntax error, unexpected end of file /var/www/html/Restaurant/application/controllers/customer/Api.php 1632
+ERROR - 2021-03-22 00:16:50 --> 404 Page Not Found: customer/Api/getCCavenuParameter
+ERROR - 2021-03-22 00:16:54 --> Severity: error --> Exception: syntax error, unexpected ''NS_for_complete_' (T_ENCAPSED_AND_WHITESPACE), expecting ']' /var/www/html/Restaurant/application/controllers/customer/Api.php 787
+ERROR - 2021-03-22 04:19:58 --> Severity: error --> Exception: Unable to locate the model you have specified: Supervisor /var/www/html/Restaurant/system/core/Loader.php 348
+ERROR - 2021-03-22 05:33:56 --> Query error: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ')   group by order_id  ORDER BY id DESC' at line 1 - Invalid query: SELECT tbl_order_detail_for_restaurant.*,`spots`.`name` as RestaurentName from tbl_order_detail_for_restaurant INNER JOIN spots ON tbl_order_detail_for_restaurant.admin_id = spots.admin_id where customer_mobile_no IN (,)   group by order_id  ORDER BY id DESC
+ERROR - 2021-03-22 05:34:03 --> Query error: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ')   group by order_id  ORDER BY id DESC' at line 1 - Invalid query: SELECT tbl_order_detail_for_restaurant.*,`spots`.`name` as RestaurentName from tbl_order_detail_for_restaurant INNER JOIN spots ON tbl_order_detail_for_restaurant.admin_id = spots.admin_id where customer_mobile_no IN (,)   group by order_id  ORDER BY id DESC
+ERROR - 2021-03-22 05:37:13 --> 404 Page Not Found: customer/Api/get_order_detail_for_customer

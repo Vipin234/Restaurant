@@ -1,0 +1,5 @@
+<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+
+ERROR - 2021-03-09 00:12:48 --> Query error: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ')   group by order_id  ORDER BY id DESC' at line 1 - Invalid query: SELECT tbl_order_detail_for_restaurant.*,`spots`.`name` as RestaurentName from tbl_order_detail_for_restaurant INNER JOIN spots ON tbl_order_detail_for_restaurant.admin_id = spots.admin_id where customer_mobile_no IN (,)   group by order_id  ORDER BY id DESC
+ERROR - 2021-03-09 03:20:11 --> Query error: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'status !=0' at line 1 - Invalid query: Update tbl_sub_order_detail_for_restaurant set order_status='Closed',status='7',payment_status=1 WHERE order_id='031' status !=0
+ERROR - 2021-03-09 04:33:52 --> Severity: error --> Exception: syntax error, unexpected '$totalNetPayableAmount' (T_VARIABLE) /var/www/html/Restaurant/application/controllers/customer/Api.php 674
