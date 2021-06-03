@@ -1,5 +1,5 @@
 
-  <body class="nav-sm">
+  <body class="nav-md">
     <div class="container body">
       <div class="main_container">
         <div class="col-md-3 left_col">
@@ -21,14 +21,20 @@
                   <?php 
                   if($_SESSION['user_role']==1)
                   {?>
+
                      <li><a href="<?php echo base_url();?>index.php/SuperAdmin/superAdmin"><i class="fa fa-home"></i>Admin</a>
                  <?php }
 
                   ?>
                  
-
-                  <li><a href="<?php echo base_url();?>index.php/Admin/dashboard"><i class="fa fa-home"></i>Restaurant</a>
-
+                    <li>
+                      <a><i class="fa fa-home"></i>Restaurant<span class="fa fa-chevron-down"></span></a>
+                      <ul class="nav child_menu">
+                         <li><a href="<?php echo base_url();?>index.php/Admin/dashboard"><i class="fa fa-home"></i>Restaurant</a>
+                        <li><a href="<?php echo base_url();?>index.php/Admin/dashboard"><i class="fa fa-home"></i>Restaurant</a>
+                         <li><a href="<?php echo base_url();?>index.php/Admin/dashboard"><i class="fa fa-home"></i>Restaurant</a>
+                    </ul>
+                    </li>
                   </li>
                   <li><a href="<?php echo base_url();?>index.php/StaffListController/staffList"><i class="fa fa-edit"></i>Restaurant Staff </a>
                   

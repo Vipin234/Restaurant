@@ -17,7 +17,7 @@ class Admin_model extends CI_Model
     {
 
             $select="s.rating,a.restaurant_name,a.user_email,a.mobile_no,s.gst_no,s.pan_no,s.address,a.user_role,s.create_date,a.admin_id,s.status";
-	        $this->db->select($select);
+	        $this->db->select($select); 
 	        $this->db->from('spots AS s');
             // print_r($_SESSION['user_role']);exit;
             $this->db->JOIN('tbl_admin AS a','a.admin_id=s.admin_id','INNER');
