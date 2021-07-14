@@ -88,10 +88,13 @@ class Customer extends CI_Model
     function getGroupData($customer_mobile_no,$customer_mobile_no1)
     {
      
-
-         $data = $this->db->query("SELECT tbl_order_detail_for_restaurant.*,`spots`.`name` as RestaurentName,`spots`.`address` as `address`,`spots`.`phone` as `phone` from tbl_order_detail_for_restaurant INNER JOIN spots ON tbl_order_detail_for_restaurant.admin_id = spots.admin_id where customer_mobile_no=$customer_mobile_no group by order_id  ORDER BY id DESC");
-        //print_r($this->db->last_query());exit;
-	return($data->result_array());
+        if(!empty($customer_mobile_no)){
+          
+           $data = $this->db->query("SELECT tbl_order_detail_for_restaurant.*,`spots`.`name` as RestaurentName,`spots`.`address` as `address`,`spots`.`phone` as `phone` from tbl_order_detail_for_restaurant INNER JOIN spots ON tbl_order_detail_for_restaurant.admin_id = spots.admin_id where customer_mobile_no=$customer_mobile_no group by order_id  ORDER BY id DESC");
+           //print_r($this->db->last_query());exit;
+           return($data->result_array());
+        }
+        
     }
     function getDataOrderWise($orderid)
     {
@@ -213,7 +216,7 @@ class Customer extends CI_Model
 
         $string.='where cus_id="'.$cus_id.'" and mobile_no="'.$mobile_no.'"';
 
-        // print_r($string);exit;
+        //print_r($string);exit;
 
         $this->db->query($string);
 
@@ -318,15 +321,14 @@ class Customer extends CI_Model
         $cus_id = $data->cus_id;
         $device_id = $data->device_id;
         $now = $data->logout_time;
-         $this->db->query("UPDATE tbl_login_customer SET active_status='$active_status',logout_time='$now',notification_id='NULL' where cus_id='$cus_id' and device_id='$device_id'");
+         $this->db->query("UPDATE tbl_login_customer SET active_status='$active_status',logout_time='$now',notification_id='NULL' where mobile_no='$cus_id' and device_id='$device_id'");
     }
-
 
       function send_otp($mobile_no,$otpValue)
     {
         // Set POST variables
-
-        $url = 'https://2factor.in/API/V1/c43867a9-ba7e-11e9-ade6-0200cd936042/SMS/'.$mobile_no.'/'.$otpValue.'/'.'OTP'.'';
+        $url='https://2factor.in/API/V1/c43867a9-ba7e-11e9-ade6-0200cd936042/SMS/'.$mobile_no.'/'.$otpValue.'/OYLY%20OTP';
+        // $url = 'https://2factor.in/API/V1/c43867a9-ba7e-11e9-ade6-0200cd936042/SMS/'.$mobile_no.'/'.$otpValue.'/'.'OTP'.'';
         // Open connection
         $ch = curl_init();\
         // Set the url, number of POST vars, POST data
@@ -460,17 +462,42 @@ class Customer extends CI_Model
      {
         date_default_timezone_set('Asia/kolkata'); 
         $now = date('Y-m-d');
-        $q=$this->db->query("SELECT order_id from tbl_notification_by_staff where customer_mobile_no='".$customer_mobile_no."' and status='1'");
+        $q=$this->db->query("SELECT order_id from tbl_notification_by_staff where staff_mobile_no='".$customer_mobile_no."' and status='1' and date_time LIKE '%$now%'");
+        return($q->num_rows());
+     }
+    public function check_total_count_notification2($customer_mobile_no)
+     {
+
+        date_default_timezone_set('Asia/kolkata'); 
+        $now = date('Y-m-d');
+        $q=$this->db->query("SELECT order_id from tbl_notification_by_customer where mobile_no='".$customer_mobile_no."' and status='1' and date_time LIKE '%$now%'");
         return($q->num_rows());
      }
       function get_notification_data($customer_mobile_no)
     {  
-      $q=$this->db->query("SELECT * from tbl_notification_by_staff where customer_mobile_no='$customer_mobile_no'order by date_time desc");
+       date_default_timezone_set('Asia/kolkata'); 
+        $now = date('Y-m-d');
+      $q=$this->db->query("SELECT * from tbl_notification_by_staff where staff_mobile_no='$customer_mobile_no' and date_time LIKE '%$now%' order by date_time desc");
+      // print_r($this->db->last_query());exit;
+       return($q->result_array());
+    }
+    function get_notification_data2($customer_mobile_no)
+    {  
+      date_default_timezone_set('Asia/kolkata'); 
+        $now = date('Y-m-d');
+      $q=$this->db->query("SELECT * from tbl_notification_by_customer where mobile_no='$customer_mobile_no' and  date_time LIKE '%$now%'order by date_time desc");
        return($q->result_array());
     }
      function check_status_for_notification($check_status,$customer_mobile_no)     
     {   
-      $this->db->query("UPDATE tbl_notification_by_staff SET status='0' where customer_mobile_no='$customer_mobile_no'");
+
+      $this->db->query("UPDATE tbl_notification_by_staff SET status='0' where staff_mobile_no='$customer_mobile_no'");
+     return  $this->db->affected_rows();
+    }
+     function check_status_for_notification2($check_status,$customer_mobile_no)     
+    {   
+
+      $this->db->query("UPDATE tbl_notification_by_customer SET status='0' where mobile_no='$customer_mobile_no'");
      return  $this->db->affected_rows();
     }
     function get_food_type()
@@ -496,6 +523,7 @@ class Customer extends CI_Model
           return($q->row());
         $row = $q->num_rows();
      }
+
  public function getMax($order_id,$admin_id)
   {
 
@@ -681,7 +709,7 @@ public function getCustId($order_id,$admin_id,$customer_mobile_no)
         $this->db->where('admin_id',$admin_id);
 	$this->db->where('status',1);
         $query=$this->db->get();
-        // print_r($this->db->last_query());
+        // print_r($this->db->last_query());exit;
         return $query->result_array();
       }
       public function getSubCatMenuItems($sub_cat_id,$cat_id,$admin_id)
@@ -725,12 +753,26 @@ public function getCustId($order_id,$admin_id,$customer_mobile_no)
         $insert = $this->db->insert('payment_txns', $data);
         return $insert?$this->db->insert_id():false;
   }
-  public function getMaxOrderId($admin_id)
-  {
-    $new_admin=str_replace("_","","$admin_id").'-';
-    $this->db->select("MAX(CAST(REPLACE(order_id,'$new_admin','') AS UNSIGNED)+1) AS `order_id`");
+ function getPrvOrderDate($admin_id){
+    $this->db->select('date');
     $this->db->from('tbl_order_detail_for_restaurant');
     $this->db->where('admin_id',$admin_id);
+    $this->db->order_by('date',DESC);
+    $this->db->LIMIT(1);
+    $query=$this->db->get();
+    // print_r($this->db->last_query());exit;
+    $result=$query->result_array();
+    return $result;
+}
+  public function getMaxOrderId($admin_id,$date)
+  {
+    date_default_timezone_set('Asia/kolkata'); 
+    $order_id=$admin_id.'-'.substr(str_replace('-', '',$date),2);
+    // echo $order_id;exit;
+    $this->db->select("MAX(CAST(REPLACE(order_id,'$order_id','') AS UNSIGNED)+1) AS `order_id`");
+    $this->db->from('tbl_order_detail_for_restaurant');
+    $this->db->where('admin_id',$admin_id);
+    $this->db->where('date',date('Y-m-d'));
     $query=$this->db->get();
     // print_r($this->db->last_query());exit;
     $result=$query->result_array();
@@ -768,15 +810,29 @@ public function getCustId($order_id,$admin_id,$customer_mobile_no)
   }
   public function getRestaurantStaffNotification($admin_id)
   {
-    $this->db->select('mlu.notification_id,rsr.mobile_no');
+    $this->db->select('mlu.notification_id,rsr.mobile_no,rsr.user_type');
     $this->db->from('tbl_manage_login_user AS mlu');
     $this->db->JOIN('tbl_restaurant_staff_registration AS rsr','rsr.mobile_no=mlu.mobile_no','INNER');
     $this->db->where('rsr.status',1);
     $this->db->where('rsr.admin_id',$admin_id);
     $this->db->where('mlu.active_status',1);
-    $this->db->where('rsr.user_type','Waiter');
+    $this->db->where("rsr.user_type IN('Waiter','Supervisor')");
     $query=$this->db->get();
-    // print_r($this->db->last_query());
+    // print_r($this->db->last_query());exit;
+    $result=$query->result_array();
+    return $result;
+  }
+  public function getSupervisorData($admin_id)
+  {
+    $this->db->select('mlu.notification_id,rsr.mobile_no,rsr.user_type');
+    $this->db->from('tbl_manage_login_user AS mlu');
+    $this->db->JOIN('tbl_restaurant_staff_registration AS rsr','rsr.mobile_no=mlu.mobile_no','INNER');
+    $this->db->where('rsr.status',1);
+    $this->db->where('rsr.admin_id',$admin_id);
+    $this->db->where('mlu.active_status',1);
+    $this->db->where("rsr.user_type IN('Supervisor')");
+    $query=$this->db->get();
+    // print_r($this->db->last_query());exit;
     $result=$query->result_array();
     return $result;
   }
@@ -869,7 +925,7 @@ public function getCustId($order_id,$admin_id,$customer_mobile_no)
     $this->db->where('status',1);
     $this->db->where('menu_id IN ('.$string.')');
     $query=$this->db->get();
-    // print_r($this->db->last_query());
+    // print_r($this->db->last_query());exit;
     $result=$query->result_array();
     return $result;
   }
@@ -974,6 +1030,78 @@ function getSubOrderItems($order_id,$admin_id){
   $query=$this->db->get();
   // print_r($this->db->last_query());exit;
   $result=$query->result_array();
+}
+function getRestaurantTypes(){
+  $this->db->select('*');
+  $this->db->from('master_restaurant_types');
+  $this->db->where('status',1);
+  $query=$this->db->get();
+  // print_r($this->db->last_query());exit;
+  $result=$query->result_array();
+  return $result;
+}
+public function getCustmoerData($order_id,$admin_id)
+{
+        $this->db->select('*');
+        $this->db->from('tbl_order_detail_for_restaurant');
+        $this->db->where('order_id',$order_id);
+        $this->db->where('admin_id',$admin_id);
+        // $this->db->where('status',1);
+        $query=$this->db->get();
+        // print_r($this->db->last_query());
+        $result=$query->result_array();
+        return $result;
+}
+function getCustData($mobile_no){
+  $this->db->select('notification_id,mobile_no,user_type');
+  $this->db->from('tbl_login_customer');
+  $this->db->where('status',1);
+  $this->db->where('mobile_no',$mobile_no);
+  $query=$this->db->get();
+  // print_r($this->db->last_query());exit;
+  $result=$query->result_array();
+  return $result;
+}
+function getAdminData($admin_id){
+
+  $this->db->select('mlu.notification_id,mlu.mobile_no,a.user_type');
+  $this->db->from('tbl_manage_login_user AS mlu');
+  $this->db->JOIN('tbl_admin AS a','a.mobile_no=mlu.mobile_no','INNER');
+  $this->db->where('a.admin_id',$admin_id);
+  $this->db->where('mlu.status',1);
+  $query=$this->db->get();
+  // print_r($this->db->last_query());exit;
+  $result=$query->result_array();
+  return $result;
+}
+function getWaiterList(){
+  $this->db->select('*');
+  $this->db->from('tbl_restaurant_staff_registration');
+  $this->db->where('status',1);
+  $this->db->where('user_type','Waiter');
+  $query=$this->db->get();
+  // print_r($this->db->last_query());exit;
+  $result=$query->result_array();
+  return $result;
+}
+public function getWaiterNotification($waiter_mobile_no)
+{
+    $this->db->select('notification_id,user_type,mobile_no');
+    $this->db->from('tbl_manage_login_user');
+    $this->db->where('mobile_no',$waiter_mobile_no);
+    $this->db->where('active_status',1);
+    $query=$this->db->get();
+    // print_r($this->db->last_query());exit;
+    $result=$query->result_array();
+    return $result;
+}
+function checkLoginStatus($mobile_no,$device_id,$cus_id){
+    $this->db->select('notification_id');
+    $this->db->from('tbl_login_customer');
+    $query=$this->db->get();
+    // print_r($this->db->last_query());exit;
+    $result=$query->result_array();
+    return $result;
 }
 }
 ?>

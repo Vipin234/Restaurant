@@ -145,5 +145,20 @@ function UpdatePayment($string){
     // print_r($this->db->last_query());exit;
     return $this->db->affected_rows();
 }
-
+function getConvience($convenience_code){
+    $this->db->select('convenience');
+    $this->db->from('master_convenience');
+    $this->db->where('id',$convenience_code);
+    $query=$this->db->get();
+    $result=$query->result_array();
+    return $result[0]['convenience'];
+}
+function getGstValue($gst_code){
+    $this->db->select('gst');
+    $this->db->from('master_gst');
+    $this->db->where('id',$gst_code);
+    $query=$this->db->get();
+    $result=$query->result_array();
+    return $result[0]['gst'];
+}
 }

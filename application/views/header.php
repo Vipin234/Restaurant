@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="icon" href="images/favicon.ico" type="image/ico" />
-    <meta http-equiv="refresh" content="900;url=<?php echo base_url()?>"/>
+    <meta http-equiv="refresh" content="7200;url=<?php echo base_url()?>"/>
 
     <title>Restaurant</title>
 

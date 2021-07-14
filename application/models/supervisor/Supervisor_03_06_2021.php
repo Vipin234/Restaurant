@@ -5,7 +5,6 @@ class Supervisor extends CI_Model
     
     function admin_registration($data)
     {
-
         $name =$data ->name;
         $restaurant_name=$data->restaurant_name;
         $mobile_no=$data->mobile_no;
@@ -16,12 +15,18 @@ class Supervisor extends CI_Model
         $user_createdate=$data->user_createdate;        
         $status=$data->status;
         $salt=$data->salt;
-        $admin_id=$data->admin_id;
         $user_type='admin';
-        $query="insert into tbl_admin(user_fullname,restaurant_name,mobile_no,user_email,user_password,user_role,user_active,user_type,user_createdate,status,salt,admin_id) values('$name','$restaurant_name','$mobile_no','$user_email','$user_password','$user_role','$user_active','$user_type','$user_createdate','$status','$salt','$admin_id')";
-        $this->db->query($query);    
-      return $query?$this->db->insert_id():false;   
+        
+         $query="insert into tbl_admin(user_fullname,restaurant_name,mobile_no,user_email,user_password,user_role,user_active,user_type,user_createdate,status,salt) values('$name','$restaurant_name','$mobile_no','$user_email','$user_password','$user_role','$user_active','$user_type','$user_createdate','$status','$salt')";
+        
+            $this->db->query($query);    
+            return $query?$this->db->insert_id():false;   
       
+    }
+
+    function update_admin_id($alphanumerric,$result)
+    {   
+      $this->db->query("UPDATE tbl_admin SET admin_id='$alphanumerric' where user_id='$result'");
     }
      function add_order_detail_restaurant($data)
     {
@@ -243,25 +248,12 @@ class Supervisor extends CI_Model
     }
     function get_notification_data($staff_mobile_no)
     {  
-       date_default_timezone_set('Asia/kolkata'); 
-        $now = date('Y-m-d');
-      $q=$this->db->query("SELECT  `order_id`, `admin_id`, `table_no`, `customer_mobile_no`, `title`, `message`, `date_time`, `modified_date`, `status`, `count_status` from tbl_notification_by_staff where staff_mobile_no='$staff_mobile_no'and date_time LIKE '%$now%'order by date_time DESC");
-       // print_r($this->db->last_query());exit;
-       return($q->result_array());
-    }
-    function get_notification_data3($staff_mobile_no)
-    {  
-       date_default_timezone_set('Asia/kolkata'); 
-        $now = date('Y-m-d');
-      $q=$this->db->query("SELECT  `order_id`, `admin_id`, `table_no`, `customer_mobile_no`, `title`, `message`, `date_time`, `modified_date`, `status`, `count_status` from tbl_notification_by_customer where mobile_no='$staff_mobile_no'and date_time LIKE '%$now%'order by date_time DESC");
-
+      $q=$this->db->query("SELECT  `order_id`, `admin_id`, `table_no`, `customer_mobile_no`, `title`, `message`, `date_time`, `modified_date`, `status`, `count_status` from tbl_notification_by_staff where staff_mobile_no='$staff_mobile_no'order by date_time desc");
        return($q->result_array());
     }
  function get_notification_data2($staff_mobile_no)
     {  
-       date_default_timezone_set('Asia/kolkata'); 
-        $now = date('Y-m-d');
-      $q=$this->db->query("SELECT  `order_id`, `admin_id`, `table_no`, `customer_mobile_no`, `mobile_no`, `title`, `message`, `date_time`, `modified_date`, `status`, `count_status` from tbl_notification_by_customer where mobile_no='$staff_mobile_no'and date_time LIKE '%$now%' order by date_time DESC");
+      $q=$this->db->query("SELECT  `order_id`, `admin_id`, `table_no`, `customer_mobile_no`, `mobile_no`, `title`, `message`, `date_time`, `modified_date`, `status`, `count_status` from tbl_notification_by_customer where mobile_no='$staff_mobile_no' order by date_time desc");
        return($q->result_array());
     }
 
@@ -269,7 +261,7 @@ class Supervisor extends CI_Model
     {  
       
       $q=$this->db->query("SELECT * FROM tbl_order_detail_for_restaurant where date 
-                          between '$start_date' and '$end_date'  and order_status ='Complete' and admin_id='$admin_id' order by date DESC ");
+                          between '$start_date' and '$end_date'  and order_status ='Complete' and admin_id='$admin_id' order by date desc ");
       
        return($q->result_array());
     }
@@ -500,8 +492,7 @@ class Supervisor extends CI_Model
     {
         // Set POST variables
         //$mobile_no=9799572870;
-        $url='https://2factor.in/API/V1/c43867a9-ba7e-11e9-ade6-0200cd936042/SMS/'.$mobile_no.'/'.$otpValue.'/OYLY%20OTP';
-        // $url = 'https://2factor.in/API/V1/c43867a9-ba7e-11e9-ade6-0200cd936042/SMS/'.$mobile_no.'/'.$otpValue.'/'.'OTP'.'';
+        $url = 'https://2factor.in/API/V1/c43867a9-ba7e-11e9-ade6-0200cd936042/SMS/'.$mobile_no.'/'.$otpValue.'/'.'OTP'.'';
         // Open connection
         $ch = curl_init();
         // Set the url, number of POST vars, POST data
@@ -581,14 +572,14 @@ class Supervisor extends CI_Model
      {
         date_default_timezone_set('Asia/kolkata'); 
         $now = date('Y-m-d');
-        $q=$this->db->query("SELECT order_id from tbl_notification_by_staff where staff_mobile_no='".$staff_mobile_no."' and count_status='1' and date_time LIKE '%$now%'");
+        $q=$this->db->query("SELECT order_id from tbl_notification_by_staff where staff_mobile_no='".$staff_mobile_no."' and count_status='1'");
         return($q->num_rows());
      }
    public function check_total_count_notifications2($staff_mobile_no)
      {
         date_default_timezone_set('Asia/kolkata'); 
         $now = date('Y-m-d');
-        $q=$this->db->query("SELECT order_id from tbl_notification_by_customer where mobile_no='".$staff_mobile_no."' and count_status='1' and date_time LIKE '%$now%'");
+        $q=$this->db->query("SELECT order_id from tbl_notification_by_customer where mobile_no='".$staff_mobile_no."' and count_status='1'");
         return($q->num_rows());
      }
      function check_status_for_notifications($check_status,$staff_mobile_no)
@@ -1487,7 +1478,7 @@ public function getGstInforForOrder($order_id,$admin_id)
        $this->db->where('admin_id',$admin_id);
        $this->db->where('status',1);
        $query=$this->db->get();
-       // print_r($this->db->last_query());exit;
+       //print_r($this->db->last_query());exit;
        $result=$query->result_array();
        return $result;
   }
@@ -1523,7 +1514,7 @@ public function getGstInforForOrder($order_id,$admin_id)
     $insert=$this->db->insert('misc_sub_category',$array);
     return $insert?$this->db->insert_id():false;
   }
-  public function getRestaurantCategory($admin_id,$rtrim)
+public function getRestaurantCategory($admin_id,$rtrim)
   {
        $this->db->select('*');
        $this->db->from('misc_category');
@@ -1538,7 +1529,6 @@ public function getGstInforForOrder($order_id,$admin_id)
        $result=$query->result_array();
        return $result;
   }
-    
     function getCatIds($admin_id)
   {
     $this->db->select('DISTINCT(cat_id)');
@@ -1620,28 +1610,15 @@ public function getGstInforForOrder($order_id,$admin_id)
         // print_r($this->db->last_query());
         return $query->result_array();
    }
-   function getPrvOrderDate($admin_id){
-    $this->db->select('date');
-    $this->db->from('tbl_order_detail_for_restaurant');
-    $this->db->where('admin_id',$admin_id);
-    $this->db->order_by('date',DESC);
-    $this->db->LIMIT(1);
-    $query=$this->db->get();
-    // print_r($this->db->last_query());exit;
-    $result=$query->result_array();
-    return $result;
-   }
-  public function getMaxOrderId($admin_id,$date)
+
+  public function getMaxOrderId($admin_id)
   {
-    date_default_timezone_set('Asia/kolkata'); 
-    $order_id=$admin_id.'-'.substr(str_replace('-', '',$date),2);
-    // echo $order_id;exit;
-    $this->db->select("MAX(CAST(REPLACE(order_id,'$order_id','') AS UNSIGNED)+1) AS `order_id`");
+    $new_admin=str_replace("_","","$admin_id").'-';
+    $this->db->select("MAX(CAST(REPLACE(order_id,'$new_admin','') AS UNSIGNED)+1) AS `order_id`");
     $this->db->from('tbl_order_detail_for_restaurant');
     $this->db->where('admin_id',$admin_id);
-    $this->db->where('date',date('Y-m-d'));
     $query=$this->db->get();
-    // print_r($this->db->last_query());exit;
+    //print_r($this->db->last_query());
     $result=$query->result_array();
     return $result[0]['order_id'];
   }
@@ -1660,7 +1637,7 @@ public function getGstInforForOrder($order_id,$admin_id)
   }
   public function getStaffNotification($admin_id,$desingination)
   {
-    $this->db->select('mlu.notification_id,mlu.mobile_no,rsr.user_type,rsr.name');
+    $this->db->select('mlu.notification_id');
     $this->db->from('tbl_restaurant_staff_registration AS rsr');
     $this->db->JOIN('tbl_manage_login_user AS mlu','mlu.mobile_no=rsr.mobile_no','INNER');
     $this->db->where('rsr.admin_id',$admin_id);
@@ -1669,7 +1646,7 @@ public function getGstInforForOrder($order_id,$admin_id)
     $query=$this->db->get();
     // print_r($this->db->last_query());exit;
     $result=$query->result_array();
-    return $result;
+    return $result[0]['notification_id'];
   }
    public function insertNotification($array)
   {
@@ -1684,20 +1661,20 @@ public function getGstInforForOrder($order_id,$admin_id)
         $this->db->where('admin_id',$admin_id);
         // $this->db->where('status',1);
         $query=$this->db->get();
-        // print_r($this->db->last_query());exit;
+        // print_r($this->db->last_query());
         $result=$query->result_array();
         return $result[0]['confirm_order_by'];
   }
 public function getWaiterNotification($waiter_mobile_no)
 {
-    $this->db->select('notification_id,user_type,mobile_no');
+    $this->db->select('notification_id');
     $this->db->from('tbl_manage_login_user');
     $this->db->where('mobile_no',$waiter_mobile_no);
     $this->db->where('active_status',1);
     $query=$this->db->get();
     // print_r($this->db->last_query());exit;
     $result=$query->result_array();
-    return $result;
+    return $result[0]['notification_id'];
 }
 public function getCusmerData($order_id,$admin_id)
 {
@@ -1714,19 +1691,19 @@ public function getCusmerData($order_id,$admin_id)
 }
 public function checkOrderStatus($order_id,$admin_id)
 {
-        $this->db->select('*');
+        $this->db->select('');
         $this->db->from('tbl_order_detail_for_restaurant');
         $this->db->where('order_id',$order_id);
         $this->db->where('admin_id',$admin_id);
         $this->db->where('status',1);
         $query=$this->db->get();
-        // print_r($this->db->last_query());exit;
+        // print_r($this->db->last_query());
         $result=$query->result_array();
         return $result;
 }
-public function getCustmoerData($order_id,$admin_id)
+public function getCustmoerPhone($order_id,$admin_id)
 {
-        $this->db->select('*');
+        $this->db->select('customer_mobile_no');
         $this->db->from('tbl_order_detail_for_restaurant');
         $this->db->where('order_id',$order_id);
         $this->db->where('admin_id',$admin_id);
@@ -1734,17 +1711,17 @@ public function getCustmoerData($order_id,$admin_id)
         $query=$this->db->get();
         // print_r($this->db->last_query());
         $result=$query->result_array();
-        return $result;
+        return $result[0]['customer_mobile_no'];
 }
 public function getOrderDate($order_id)
 {
-        $this->db->select('date');
+        $this->db->select('create_date');
         $this->db->from('tbl_order_detail_for_restaurant');
         $this->db->where('order_id',$order_id);
         $query=$this->db->get();
         // print_r($this->db->last_query());
         $result=$query->result_array();
-        return $result[0]['date'];
+        return $result[0]['create_date'];
 }
 public function getInvoiceData($admin_id,$order_id)
 {
@@ -1797,126 +1774,6 @@ function getSubOrderItems($order_id,$admin_id){
   $result=$query->result_array();
   return $result;
 }
-function getRestaurantTypes(){
-  $this->db->select('*');
-  $this->db->from('master_restaurant_types');
-  $this->db->where('status',1);
-  $query=$this->db->get();
-  // print_r($this->db->last_query());exit;
-  $result=$query->result_array();
-  return $result;
-}
-function getStaffData($user_type,$admin_id){
-  $this->db->select('*');
-  $this->db->from('tbl_restaurant_staff_registration');
-  $this->db->where('status',1);
-  $this->db->where('admin_id',$admin_id);
-  $this->db->where('user_type',$user_type);
-  $query=$this->db->get();
-  // print_r($this->db->last_query());exit;
-  $result=$query->result_array();
-  return $result;
-}
-function getwaiterData($waiter_mobile_no){
-  $this->db->select('*');
-  $this->db->from('tbl_restaurant_staff_registration');
-  $this->db->where('status',1);
-  $this->db->where('mobile_no',$waiter_mobile_no);
-  $query=$this->db->get();
-  // print_r($this->db->last_query());exit;
-  $result=$query->result_array();
-  return $result;
-}
-function getCustData($mobile_no){
-  $this->db->select('notification_id,mobile_no,user_type');
-  $this->db->from('tbl_login_customer');
-  $this->db->where('status',1);
-  $this->db->where('mobile_no',$mobile_no);
-  $query=$this->db->get();
-  // print_r($this->db->last_query());exit;
-  $result=$query->result_array();
-  return $result;
-}
-function getAdminData($admin_id){
 
-  $this->db->select('mlu.notification_id,mlu.mobile_no,a.user_type');
-  $this->db->from('tbl_manage_login_user AS mlu');
-  $this->db->JOIN('tbl_admin AS a','a.mobile_no=mlu.mobile_no','INNER');
-  $this->db->where('a.admin_id',$admin_id);
-  $this->db->where('mlu.status',1);
-  $query=$this->db->get();
-  // print_r($this->db->last_query());exit;
-  $result=$query->result_array();
-  return $result;
-}
-public function getRestaurantStaffNotification($admin_id,$mobile_no)
-  {
-    $this->db->select('mlu.notification_id,rsr.mobile_no,rsr.user_type,rsr.name');
-    $this->db->from('tbl_manage_login_user AS mlu');
-    $this->db->JOIN('tbl_restaurant_staff_registration AS rsr','rsr.mobile_no=mlu.mobile_no','INNER');
-    $this->db->where('rsr.status',1);
-    $this->db->where('rsr.admin_id',$admin_id);
-    $this->db->where('mlu.active_status',1);
-    $this->db->where('mlu.mobile_no',$mobile_no);
-    $this->db->where('rsr.user_type','Waiter');
-    $query=$this->db->get();
-    // print_r($this->db->last_query());exit;
-    $result=$query->result_array();
-    return $result;
-  }
-  function getSupervisordata($admin_id){
-    $this->db->select('mlu.notification_id,rsr.mobile_no,rsr.user_type');
-    $this->db->from('tbl_manage_login_user AS mlu');
-    $this->db->JOIN('tbl_restaurant_staff_registration AS rsr','rsr.mobile_no=mlu.mobile_no','INNER');
-    $this->db->where('rsr.status',1);
-    $this->db->where('rsr.admin_id',$admin_id);
-    $this->db->where('mlu.active_status',1);
-    $this->db->where('rsr.user_type','Supervisor');
-    $query=$this->db->get();
-    // print_r($this->db->last_query());exit;
-    $result=$query->result_array();
-    return $result;
-  }
-   public function getAdmin($order_id)
-  {
-    $this->db->select('admin_id');
-    $this->db->from('tbl_order_detail_for_restaurant');
-    $this->db->where('order_id',$order_id);
-    $query=$this->db->get();
-    // print_r($this->db->last_query());
-    $result=$query->result_array();
-    return $result[0]['admin_id'];
-  }
-  function getPrefix($city){
-    $this->db->select('mc.city_prefix,ms.state_prefix');
-    $this->db->FROM('master_city AS mc');
-    $this->db->JOIN('master_state AS ms','ms.state_code=mc.state_code','INNER');
-    $this->db->JOIN('master_country AS mcc','mcc.country_code=ms.country_code','INNER');
-    $this->db->where('mc.city_name',strtoupper($city));
-    $query=$this->db->get();
-    // print_r($this->db->last_query());exit;
-    $result=$query->result_array();
-    return $result;
-  }
-  function getMaxAdminData($city_prefix,$state_prefix){
-    $prefix=$state_prefix.$city_prefix;
-    $this->db->select("MAX(CAST(REPLACE(admin_id,'$prefix','') AS UNSIGNED)) AS `admin_id`");
-    $this->db->from('tbl_admin');
-    $query=$this->db->get();
-    // print_r($this->db->last_query());exit;
-    $result=$query->result_array();
-    return $result;
-  }
-  public function getCategoryRestaurant($admin_id)
-  {
-       $this->db->select('*');
-       $this->db->from('misc_category');
-       $this->db->where('admin_id',$admin_id);
-       $this->db->where('status',1);
-       $query=$this->db->get();
-       //print_r($this->db->last_query());exit;
-       $result=$query->result_array();
-       return $result;
-  }
 }
 ?>

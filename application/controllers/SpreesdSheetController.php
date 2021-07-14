@@ -50,6 +50,9 @@ class SpreesdSheetController extends CI_Controller
                 $order_id      =trim($objWorksheet->getCellByColumnAndRow(0,$i)->getValue());
                 $data          =$this->SpreesdSheetModel->getOrderData($order_id);
                 $gstdata       =$this->SpreesdSheetModel->getData($order_id);
+                if(empty($gstdata)){
+                 echo "Invoice not generate for order no ".$order_id;exit;
+                }
                 $ref_id        =trim($objWorksheet->getCellByColumnAndRow(1,$i)->getValue());
                 $mobile_no     =trim($objWorksheet->getCellByColumnAndRow(3,$i)->getValue());
                 $amount        =trim($objWorksheet->getCellByColumnAndRow(7,$i)->getValue());
@@ -60,13 +63,12 @@ class SpreesdSheetController extends CI_Controller
                 $utr           =trim($objWorksheet->getCellByColumnAndRow(20,$i)->getValue());
                 $settled_on    =trim($objWorksheet->getCellByColumnAndRow(21,$i)->getValue());
                 $refund_status =trim($objWorksheet->getCellByColumnAndRow(22,$i)->getValue());
-
                 $result=$this->SpreesdSheetModel->getOrderRecord($order_id);
                 if(!empty($result))
                 {
                  $error[]=array('error'=>$order_id);
                 }else
-                {
+                { 
                     $array[]=array(
 
                               'admin_id'=>$data[0]['admin_id'],

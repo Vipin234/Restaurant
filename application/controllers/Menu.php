@@ -47,7 +47,7 @@ class Menu extends CI_Controller
 					$row[] 	=$list->menu_name;
 					$row[] 	=$list->menu_food_type;
           $gst    =$this->Menu_model->getGst($list->menu_category_id);
-					$row[] 	=$gst[0]['gst'];
+					$row[] 	=!empty($gst[0]['gst'])?$gst[0]['gst']:'';
           $cat    =$this->Menu_model->getCat($list->cat_id);
           $row[]  =$cat[0]['cat_name'];
           $subcat =$this->Menu_model->getSubCat($list->sub_cat_id,$list->cat_id);
@@ -257,7 +257,7 @@ public function change()
       $array=array(
           'menu_category_id'=>$menu_gst,
           'cat_id'=>$menu_category,
-          'sub_cat_id'=>$menu_sub_category,
+          'sub_cat_id'=>empty($menu_sub_category)?'NA':$menu_sub_category,
           'menu_food_type'=>$menu_food_type,
           'menu_price_type'=>$menu_price,
           'menu_name'=>$menu_name,

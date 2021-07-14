@@ -1480,10 +1480,10 @@ public function change_order_for_particular_customer_post()
 
               }else if($notification['user_type']=='Supervisor'){
               $title ='OYLY';
-              $message ='table no '.$table_no.'order id '.$order_id2.' has been more item placed.';
+              $message ='table no '.$table_no.'order id '.$order_id2.' placed an order.';
               }else if($notification['user_type']=='admin'){
               $title ='OYLY';
-              $message ='More item has been placed for table '.$table_no;
+              $message ='Order has been created for table '.$table_no;
               }
               else if($notification['user_type']=='KOT'){
               $title ='OYLY';
@@ -3327,8 +3327,7 @@ public function deleteItemForOrder_post()
           $staffData2         =$this->Supervisor->getStaffNotification($admin_id,'KOT');
           $custData           =$this->Supervisor->getCustData($getCustmoerData[0]['customer_mobile_no']);
           $order_id2          =str_replace($admin_id.'-','',$order_id);
-          $supervisorData     =$this->Supervisor->getStaffNotification($admin_id,'Supervisor');
-          $array_merge_recursive=array_merge_recursive($custData,array_merge_recursive($staffData1,$staffData2),$supervisorData);
+          $array_merge_recursive=array_merge_recursive($custData,array_merge_recursive($staffData1,$staffData2));
           // echo '<pre>';print_r($array_merge_recursive);exit;
           foreach($array_merge_recursive as $notification){
               if($notification['user_type']=='customer'){
@@ -3340,9 +3339,6 @@ public function deleteItemForOrder_post()
                   }else if($notification['user_type']=='KOT'){
                   $title ='OYLY';
                   $message ='table No '.$getCustmoerData[0]['table_no'].' item not available';
-                  }else if($notification['user_type']=='Supervisor'){
-                    $title ='OYLY';
-                    $message ='table No '.$getCustmoerData[0]['table_no'].' item not available';
                   }
               $result=sendPushNotification($title,$message,$notification['notification_id']);
                 if(!empty($result))
@@ -3462,8 +3458,7 @@ public function deleteItemForSubOrder_post()
                 $staffData2         =$this->Supervisor->getStaffNotification($admin_id,'KOT');
                 $custData           =$this->Supervisor->getCustData($getCustmoerData[0]['customer_mobile_no']);
                 $order_id2          =str_replace($admin_id.'-','',$order_id);
-                $supervisorData     =$this->Supervisor->getStaffNotification($admin_id,'Supervisor');
-                $array_merge_recursive=array_merge_recursive($custData,array_merge_recursive($staffData1,$staffData2),$supervisorData);
+                $array_merge_recursive=array_merge_recursive($custData,array_merge_recursive($staffData1,$staffData2));
                 // echo '<pre>';print_r($array_merge_recursive);exit;
                 foreach($array_merge_recursive as $notification){
                     if($notification['user_type']=='customer'){
@@ -3475,10 +3470,7 @@ public function deleteItemForSubOrder_post()
                         }else if($notification['user_type']=='KOT'){
                         $title ='OYLY';
                         $message ='table no '.$getCustmoerData[0]['table_no'].' item not available';
-                        }else if($notification['user_type']=='Supervisor'){
-                        $title ='OYLY';
-                        $message ='table No '.$getCustmoerData[0]['table_no'].' item not available';
-                       }
+                        }
                     $result=sendPushNotification($title,$message,$notification['notification_id']);
                       if(!empty($result))
                       {
@@ -4384,7 +4376,60 @@ public function getRestaurantCategory_post()
             $result=$this->Supervisor->getRestaurantCategory($admin_id,rtrim($string,','));
             if(!empty($result))
             {
-                 $aray=array('status'=>'1','data'=>$result,'message'=>'Success');
+                 $aray=array('status'=>'1','data'=>$result);
+                 $this->response($aray, 200);
+            }else
+            {
+              $aray=array('status'=>'0','message'=>'failed');
+             $this->response($aray, 200);
+            }
+          }else
+          {
+            $aray=array('status'=>'0','message'=>'failed');
+             $this->response($aray, 200);
+          }
+
+
+          if(!empty($result))
+          {
+               $aray=array('status'=>'1','data'=>$result);
+               $this->response($aray, 200);
+          }else
+          {
+            $aray=array('status'=>'0','message'=>'failed');
+          $this->response($aray, 200);
+          }
+         
+
+      }else
+      {
+          $aray=array('status'=>'0','message'=>'failed');
+          $this->response($aray, 200);
+      }
+  }catch(Ececption $e)
+  {
+    echo $e->getMessage();
+    $error = array('status' =>'0', "data" => "Internal Server Error - Please try Later.","StatusCode"=> "HTTP405");
+    $this->response($error, 200);
+  }
+  
+}
+public function getCategoryForRestaurant_post()
+{
+  try
+  {
+      $admin_id=$this->input->post('admin_id');
+
+      if(!empty($admin_id))
+      {
+
+          
+          if(!empty($string))
+          {
+            $result=$this->Supervisor->getCategoryRestaurant($admin_id);
+            if(!empty($result))
+            {
+                 $aray=array('status'=>'1','data'=>$result);
                  $this->response($aray, 200);
             }else
             {
@@ -4763,37 +4808,4 @@ public function getRestaurantSubCategory_post()
       $this->response($error, 200);
     }
   }
-  public function getCategoryForRestaurant_post()
-{
-  try
-  {
-      $admin_id=$this->input->post('admin_id');
-
-      if(!empty($admin_id))
-      {
-         $result=$this->Supervisor->getCategoryRestaurant($admin_id);
-          if(!empty($result))
-          {
-               $aray=array('status'=>'1','data'=>$result,'message'=>'success');
-               $this->response($aray, 200);
-          }else
-          {
-            $aray=array('status'=>'0','message'=>'failed');
-          $this->response($aray, 200);
-          }
-         
-
-      }else
-      {
-          $aray=array('status'=>'0','message'=>'failed');
-          $this->response($aray, 200);
-      }
-  }catch(Ececption $e)
-  {
-    echo $e->getMessage();
-    $error = array('status' =>'0', "data" => "Internal Server Error - Please try Later.","StatusCode"=> "HTTP405");
-    $this->response($error, 200);
-  }
-  
-}
 }

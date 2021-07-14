@@ -167,5 +167,31 @@ public function changeStatus($admin_id,$change,$convenience_code,$gst_code)
    $insert=$this->db->insert_batch('master_item_category',$array);
     return $insert?$this->db->insert_id():false; 
   }
- 
+ function getRestaurantTypes(){
+  $this->db->select('*');
+  $this->db->from('master_restaurant_types');
+  $this->db->where('status',1);
+  $query=$this->db->get();
+  // print_r($this->db->last_query());exit;
+  $result=$query->result_array();
+  return $result;
+}
+function addService($services){
+    $insert=$this->db->insert_batch('restaurant_types',$services);
+    return $insert?$this->db->insert_id():false; 
  }
+ function removeService($admin_id){
+     $this->db->where('admin_id', $admin_id);
+     $this->db->delete('restaurant_types');
+ }
+ function getServices($admin_id){
+  $this->db->select('type_id');
+  $this->db->from('restaurant_types');
+  $this->db->where('status',1);
+  $this->db->where('admin_id',$admin_id);
+  $query=$this->db->get();
+  // print_r($this->db->last_query());exit;
+  $result=$query->result_array();
+  return $result;
+ }
+}

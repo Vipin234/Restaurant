@@ -23,6 +23,7 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
        $this->load->helper('main_helper'); 
        $this->load->library('form_validation');
 
+ 
    }
        
 
@@ -610,8 +611,7 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
                 $custData           =$this->Customer->getCustData($getCustmoerData[0]['customer_mobile_no']);
                 $adminData          =$this->Customer->getAdminData($admin_id);
                 $order_id2          =str_replace($admin_id.'-','',$order_id);
-                $SupervisorData     =$this->Customer->getSupervisorData($admin_id);
-                $notification_data=array_merge_recursive($custData,array_merge_recursive($notificationData,$adminData),$SupervisorData);
+                $notification_data=array_merge_recursive($custData,array_merge_recursive($notificationData,$adminData));
               foreach($notification_data as $notification)
                   {
                     if($notification['user_type']=='customer'){
@@ -2870,26 +2870,4 @@ public function laterReview_post()
       $this->response($error, 200);
     }
   }
-function checkLoginStatus_post(){
-  try{
-  $mobile_no    =$_POST['mobile_no'];
-  $device_id    =$_POST['device_id'];
-  $cus_id       =$_POST['cus_id'];
-  if(!empty($mobile_no)&&!empty($device_id)&& !empty($cus_id)){
-    $result=$this->Customer->checkLoginStatus($mobile_no,$device_id,$cus_id);
-        // print_r($result);exit;
-        if(!empty($result[0]['notification_id'])){
-          echo json_encode(array('status'=>1,'message'=>'success'));exit();
-        }else{
-          echo json_encode(array('status'=>0,'message'=>'logout success'));exit();
-        }
-  }else{
-    echo json_encode(array('status'=>0,'message'=>'logout success'));exit();
-  }
-  }catch(Ececption $e){
-      $e->getMessage();
-      $error = array('status' =>'0', "data" => "Internal Server Error - Please try Later.","StatusCode"=> "HTTP405");
-      $this->response($error, 200);
-  }
-}
 }

@@ -57,8 +57,10 @@
                $('#start_time').val('');
                $('#end_time').val('');
                $('#amenities').val('');
+               $('#restaurant_service').val('');
                $('#food_type').val('');
                $('#fileupload').val('');
+               $('#service').val('');
                $('.form-group').removeClass('has-error');
                $('.help-block').empty();
                $('#imageName').val('');
@@ -313,7 +315,7 @@
                            <input type ="password"name="password" id="password"  class="form-control" type="text"  autocomplete="off">
                             <span class="help-block"style="color:red"></span>
                         </div>
-                      </div>
+                      </div> 
                       <div class="form-group row ">
                         <label class="control-label col-md-3 col-sm-3 ">Gst No</label>
                         <div class="col-md-9 col-sm-9 ">
@@ -362,7 +364,23 @@
                         </div>
                       </div>
                 
+                      <div class="form-group row">
+                        <label class="control-label col-md-3 col-sm-3 ">Select Service</label>
+                        <div class="col-md-9 col-sm-9 ">
+                          <select class="select2_multiple form-control"  multiple="multiple" id="restaurant_service"name="restaurant_service">
+                           
+                          <?php 
+                          foreach($rest_type as $rest_types)
+                          {?>
 
+                          <option value="<?php echo $rest_types['id']; ?>"><?php echo $rest_types['name']; ?></option>
+                         <?php }
+
+                          ?>
+                          </select>
+                          <span class="help-block"style="color:red"></span>
+                        </div>
+                      </div>
                       <div class="form-group row">
                         <label class="control-label col-md-3 col-sm-3 ">Select Emenities</label>
                         <div class="col-md-9 col-sm-9 ">
@@ -462,6 +480,7 @@ $('.menuFullHalfPrice').hide();
     var city              =$('#city').val();
     var imageName         =$('#imageName').val();
     var admin_id          =$('#admin_id').val();
+    var service           =$('#restaurant_service').val();
     // console.log(new FormData(this));
     // return false;
     var url;
@@ -489,6 +508,7 @@ $('.menuFullHalfPrice').hide();
           "food_type":food_type,
           "city":city,
           "admin_id":admin_id,
+          "service":service,
           "imageName":imageName
            },
         dataType: "JSON",
@@ -594,7 +614,7 @@ function edit(admin_id)
         dataType: "JSON",
         success: function(data)
         {   
-          // console.log(data.status);
+          console.log(data.result[0]['amenities']);
           if(data.status==1)
           {
 
@@ -612,6 +632,7 @@ function edit(admin_id)
              $('[name="city"]').val(data.result[0]['city']);
              $('[name="start_time"]').val(data.result[0]['openingTime']);
              $('[name="end_time"]').val(data.result[0]['closingTime']);
+             $('[name="restaurant_service"]').val(data.services);
              $('#restaurant').modal('show');
 
 

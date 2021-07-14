@@ -21,8 +21,8 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
        $this->load->library('upload');
        $this->load->helper('url');
        $this->load->helper('main_helper'); 
-       $this->load->library('form_validation');
 
+ 
    }
        
 
@@ -36,7 +36,7 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
     $notification_id=$this->input->post('notification_id');
     date_default_timezone_set('Asia/kolkata'); 
     $now = date('Y-m-d H:i:s');
-    $getdata1  =  $this->db  
+    $getdata1  =  $this->db
                   ->select('*')
                   ->from("tbl_registration_customer")
                   ->where(['mobile_no'=>$mobile_no,'active_status'=>'1'])
@@ -153,6 +153,7 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
     $mobile_no = $this->input->post('mobile_no');
     $email=$this->input->post('email');
     $cus_image=$this->input->post('cus_image');
+
     $data->cus_id = $cus_id;
     $data->name = $name;
     $data->state = $state;
@@ -165,9 +166,9 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
     $data->mobile_no= $mobile_no;
     $data->email=$email;
     $data->cus_image =$cus_image;
+    $result1 = $this->Customer->update_customer_profile($data);
     if(!empty($mobile_no))
     {
-      $result1 = $this->Customer->update_customer_profile($data);
       $data1->status ='1';
       $data1->message = 'Profile successfully update';
       array_push($result,$data1);
@@ -363,7 +364,7 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
         
         date_default_timezone_set('Asia/kolkata'); 
         $now = date('Y-m-d H:i:s');
-        $now1 = date('Y-m-d');
+        $now1 = date('Y-m-d H:i:s');
         $data->admin_id=$admin_id;
         $data->cus_id=$cus_id;
         $data->table_no=ltrim($table_no,'0');
@@ -390,24 +391,34 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
             $data1->message = 'This table is all ready book.';
             array_push($result2,$data1);
             $response->data = $data1;
-            echo  json_output($response);
          }
          else
          {
-          $prvDate=$this->Supervisor->getPrvOrderDate($admin_id);
-          $getMaxOrderId=$this->Customer->getMaxOrderId($admin_id,$prvDate[0]['date']);
-          $result =empty($getMaxOrderId)?'1':$getMaxOrderId;
-          if($result <= 9){
-            $alphanumerric=$admin_id.'-'.substr(str_replace('-', '',date('Y-m-d')),2).'000'.$result;
-          }else if($result >= '9' && $result <= '99'){
-            $alphanumerric=$admin_id.'-'.'00'.substr(str_replace('-', '',date('Y-m-d')),2).$result;
-          }else if($result >= '99' && $result <= '999'){
-           $alphanumerric=$admin_id.'-'.substr(str_replace('-', '',date('Y-m-d')),2).'0'.$result;
-          }else
-            $alphanumerric=$admin_id.'-'.$result;
-          }
-          $data->order_id=$alphanumerric;
           $updated=$this->Customer->add_order_detail_restaurant($data);
+          $getMaxOrderId=$this->Customer->getMaxOrderId($admin_id);
+          $result =empty($getMaxOrderId)?'1':$getMaxOrderId;
+          // print_r($result);exit;
+        if($result <= '9')
+        {
+          $new_admin=str_replace("_","","$admin_id").'-';
+          $alphanumerric=$new_admin.'000'.$result;
+
+        }else if($result >= '9' && $result <= '99')
+        {
+          $new_admin=str_replace("_","","$admin_id").'-';
+          $alphanumerric=$new_admin.'00'.$result;
+        }else if($result >= '99' && $result <= '999')
+        {
+          $new_admin=str_replace("_","","$admin_id").'-';
+          $alphanumerric=$new_admin.'0'.$result;
+        }
+        else
+        {
+          $new_admin=str_replace("_","","$admin_id").'-';
+          $alphanumerric=$new_admin.$result;
+        }
+        // print_r($alphanumerric);exit;
+        $update_order_detail = $this->Customer->update_order_id($alphanumerric,$updated);
         if(!empty($result))
         {  
 
@@ -439,29 +450,11 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
                           }
                           // print_r($insert_array);exit;
                         $this->Supervisor->insertBatchOrder($insert_array);
-                        $order_id           =$alphanumerric;
-                        $getCustmoerData    =$this->Customer->getCustmoerData($alphanumerric,$admin_id);
-                        $custData           =$this->Customer->getCustData($getCustmoerData[0]['customer_mobile_no']);
-                        $notificationData   =$this->Customer->getRestaurantStaffNotification($admin_id);
-                        $adminData          =$this->Customer->getAdminData($admin_id);
-                        $order_id2          =str_replace($admin_id.'-','',$order_id);
-                        $notification_data=array_merge_recursive($custData,array_merge_recursive($notificationData,$adminData));
-                        // echo "<pre>";print_r($notification_data);exit;
+                        $title ='OYLY';
+                        $message ='table No. '.$table_no.' has new order';
+                        $notification_data=$this->Customer->getRestaurantStaffNotification($admin_id);
                         foreach($notification_data as $notification)
                             {
-                              if($notification['user_type']=='customer'){
-                                  $title ='OYLY';
-                                  $message ='Your order for table no '.$table_no.' has been placed.';
-                              }else if($notification['user_type']=='Waiter'){
-                                  $title ='OYLY';
-                                  $message ='Table no '.$table_no.' placed an order.';
-                              }else if($notification['user_type']=='Supervisor'){
-                                 $title ='OYLY';
-                                  $message ='Table no '.$table_no.' order id '.$order_id2.' is placed.';
-                              }else if($notification['user_type']=='admin'){
-                                  $title ='OYLY';
-                                  $message ='Order has been created for table no '.$table_no;
-                              }
                               $result=sendPushNotification($title,$message,$notification['notification_id']);
                               if($result)
                               {
@@ -469,7 +462,7 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
                                         'mobile_no'=>$notification['mobile_no'],
                                         'admin_id'=>$admin_id,
                                         'status'=>1,
-                                        'order_id'=>$order_id2,
+                                        'order_id'=>$alphanumerric,
                                         'table_no'=>$table_no,
                                         'title'=>$title,
                                         'message'=>$message,
@@ -494,6 +487,10 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
               array_push($result2,$data2);
               $response->data = $data2;
           }
+
+         }
+        
+      
        
       echo  json_output($response);
     }
@@ -525,7 +522,7 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
         $menu_id=$this->input->post('menu_id');
         date_default_timezone_set('Asia/kolkata'); 
         $now = date('Y-m-d H:i:s');
-        $now1 = date('Y-m-d');
+        $now1 = date('Y-m-d H:i:s');
         $data->order_id=$order_id;
         $data->admin_id=$admin_id;
         if($max_id <= 9)
@@ -601,39 +598,21 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
               $checkOrderStatus=$this->Customer->checkOrderStatus($admin_id,$order_id);
               if(!empty($checkOrderStatus))
               {
-                $notificationData=$this->Customer->getRestaurantStaffNotification($admin_id);
+                $notification_data=$this->Customer->getRestaurantStaffNotification($admin_id);
               }else
               {
-                $notificationData=$this->Customer->getRestaurantWaiterNotification($admin_id,$order_id);
+                $notification_data=$this->Customer->getRestaurantWaiterNotification($admin_id,$order_id);
               }
-                $getCustmoerData    =$this->Customer->getCustmoerData($order_id,$admin_id);
-                $custData           =$this->Customer->getCustData($getCustmoerData[0]['customer_mobile_no']);
-                $adminData          =$this->Customer->getAdminData($admin_id);
-                $order_id2          =str_replace($admin_id.'-','',$order_id);
-                $SupervisorData     =$this->Customer->getSupervisorData($admin_id);
-                $notification_data=array_merge_recursive($custData,array_merge_recursive($notificationData,$adminData),$SupervisorData);
+              $title ='OYLY';
+              $message ='table No. '.$table_no.' has more item';
               foreach($notification_data as $notification)
                   {
-                    if($notification['user_type']=='customer'){
-                      $title ='OYLY';
-                      $message ='Table No '.$table_no.' placed more items.';
-                      }else if($notification['user_type']=='Waiter'){
-                      $title ='OYLY';
-                      $message ='Table No '.$table_no.' placed more items.';
-                      }else if($notification['user_type']=='Supervisor'){
-                      $title ='OYLY';
-                      $message ='Table No '.$table_no.' order id '.$order_id2.' is placed more items.';
-                      }else if($notification['user_type']=='admin'){
-                      $title ='OYLY';
-                      $message ='More items has been created for table '.$table_no;
-                      }
                     $result=sendPushNotification($title,$message,$notification['notification_id']);
                     $array[]=array(
                                   'mobile_no'=>$notification['mobile_no'],
                                   'admin_id'=>$admin_id,
                                   'status'=>1,
-                                  'order_id'=>$order_id2,
-                                  'sub_order_id'=>$sub_order_id,
+                                  'order_id'=>$order_id,
                                   'table_no'=>$table_no,
                                   'title'=>$title,
                                   'message'=>$message,
@@ -702,7 +681,7 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
               $result['phone']                    =$data[$i]['phone'];
               $result['address']                  =$data[$i]['address'];
               $result['is_reviewed']              =$data[$i]['is_reviewed'];
-              $result['new_order_id']             =str_replace($data[$i]['admin_id'].'-','',$data[$i]['order_id']);
+              $result['new_order_id']             =str_replace(str_replace('_','',$data[$i]['admin_id']),$data[$i]['date'],$data[$i]['order_id']);
               $result['cus_id']                   =$data[$i]['cus_id'];
 
               $OrderGstResult   =$this->Customer->getGstInforForOrder($result['order_id'],$result['admin_id']);
@@ -1012,7 +991,7 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
                     $result['RestaurentName']     =$data[$i]['RestaurentName'];
                     $result['table_no']           =$data[$i]['table_no'];
                     $result['status']             =$data[$i]['status'];
-                    $result['new_order_id']       =str_replace($data[$i]['admin_id'].'-','',$data[$i]['order_id']);
+                    $result['new_order_id']             =str_replace(str_replace('_','',$data[$i]['admin_id']),$data[$i]['date'],$data[$i]['order_id']);
                     $MenuItemResult               =$this->Customer->getDataOrderWises($data[$i]['order_id'],$data[$i]['admin_id']);
 
                     foreach($MenuItemResult as $menuValue)
@@ -1106,7 +1085,7 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
                     $result['RestaurentName']     =$data[$i]['RestaurentName'];
                     $result['table_no']           =$data[$i]['table_no'];
                     $result['status']             =$data[$i]['status'];
-                    $result['new_order_id']       =str_replace($data[$i]['admin_id'].'-','',$data[$i]['order_id']);
+                    $result['new_order_id']       =str_replace(str_replace('_','',$data[$i]['admin_id']),$data[$i]['date'],$data[$i]['order_id']);
                     $MenuItemResult               =$this->Customer->getDataOrderWises($data[$i]['order_id'],$data[$i]['admin_id']);
 
                     foreach($MenuItemResult as $menuValue)
@@ -1888,27 +1867,24 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
     $response =   new StdClass();
     $result       =  new StdClass();
     $customer_mobile_no =$this->input->post('customer_mobile_no');
-    $resdata1 = $this->Customer->check_total_count_notification($customer_mobile_no);
-    $resdata2 = $this->Customer->check_total_count_notification2($customer_mobile_no);
-    $resdata=$resdata1+$resdata2;
-    // print_r($resdata);exit;
-    if($resdata>0)
+    $resdata = $this->Customer->check_total_count_notification($customer_mobile_no);
+      if($resdata>0)
     {    
       $data1->count=$resdata;
       $data1->status ='1';
       array_push($result,$data1);
       $response->data = $data1;
-      }
-      else if($resdata==0)
-      {
-      $data1->count ='';
+        }
+        else if($resdata==0)
+         {
+            $data1->count ='';
       $data1->status = '1';
       array_push($result,$data1);
       $response->data = $data1;
          }
           else 
            {
-        $data1->status ='0';
+              $data1->status ='0';
         $data1->message = 'failed';
         array_push($result,$data1);
         $response->data = $data1;
@@ -1923,9 +1899,7 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
         $response   =   new StdClass();
         $result       =   array();
         $customer_mobile_no=$this->input->post('customer_mobile_no');
-        $get_notification_data1 = $this->Customer->get_notification_data($customer_mobile_no);
-        $get_notification_data2 = $this->Customer->get_notification_data2($customer_mobile_no);
-        $get_notification_data=array_merge_recursive($get_notification_data1,$get_notification_data2);
+        $get_notification_data = $this->Customer->get_notification_data($customer_mobile_no);
         if(!empty($get_notification_data))
         {
          foreach ($get_notification_data as $row)
@@ -1934,7 +1908,7 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
            $get_restaurant_name = $this->Customer->get_restaurantName($admin_id);
            $name=$get_restaurant_name->name;
             // $data['order_id'] =   $row['order_id'];
-            $data['order_id']=$row['order_id'];
+            $data['order_id']=str_replace(str_replace('_','',$row['admin_id']),date('Y-m-d', strtotime($row['date_time'])),$row['order_id']);
             $data['restaurant_name'] = $name;
             $data['customer_mobile_no'] =   $row['customer_mobile_no'];
             $data['title'] =   $row['title'];
@@ -1954,9 +1928,6 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
             $data['status']  ='0';
             array_push($result , $data);
          }
-         usort($result, function($a, $b) {
-                return [$a['create_date']] <= [$b['create_date']];
-            });
            $response->data = $result;
            echo json_output($response);
         }
@@ -1972,24 +1943,15 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
     if($check_status=='1' and $customer_mobile_no!='')
     {
        $resdata = $this->Customer->check_status_for_notification($check_status,$customer_mobile_no);
-       $this->Customer->check_status_for_notification2($check_status,$customer_mobile_no);
-       if($resdata){
-              $data1->status ='1';
-              $data1->message = 'success';
-              array_push($result,$data1);
-              $response->data = $data1;
-       }else{
-
-           $data1->status ='0';
-        $data1->message = 'failed';
-        array_push($result,$data1);
-        $response->data = $data1;
-       }
     
-      }
-      else 
-       {
-        $data1->status ='0';
+      $data1->status ='1';
+      $data1->message = 'success';
+      array_push($result,$data1);
+      $response->data = $data1;
+        }
+          else 
+           {
+              $data1->status ='0';
         $data1->message = 'failed';
         array_push($result,$data1);
         $response->data = $data1;
@@ -2135,7 +2097,7 @@ require APPPATH . 'libraries/mailer/PHPMailer/PHPMailerAutoload.php';
           $token=generateToken($api_key,$app_id,$json);
           $result=$this->Customer->getCustInfo($mobile_no);
           $name=empty($result[0]['name'])?'Dear Customer':$result[0]['name'];
-          //$mobile_no=$result[0]['mobile_no'];
+          $mobile_no=$result[0]['mobile_no'];
           $email_id=empty($result[0]['email_id'])?'hawkers.nearme@gmail.com':$result[0]['email_id'];
           $arry=array(
               'status'    =>'1',
@@ -2165,42 +2127,10 @@ public function getRestaurantCategory_post()
   {
       $admin_id=$this->input->post('admin_id');
 
-      $cat_result=$this->Customer->getCatIds($admin_id);
-
-      $string='';
-
-      if(!empty($cat_result))
-      {
-            foreach($cat_result AS $value)
-          {
-
-             $string .= "'".$value['cat_id']."'".',';
-          }
-      }
-
       if(!empty($admin_id))
       {
 
-          
-          if(!empty($string))
-          {
-            $result=$this->Customer->getRestaurantCategory($admin_id,rtrim($string,','));
-            if(!empty($result))
-            {
-                 $aray=array('status'=>'1','data'=>$result);
-                 $this->response($aray, 200);
-            }else
-            {
-              $aray=array('status'=>'0','message'=>'failed');
-             $this->response($aray, 200);
-            }
-          }else
-          {
-            $aray=array('status'=>'0','message'=>'failed');
-             $this->response($aray, 200);
-          }
-
-
+          $result=$this->Customer->getRestaurantCategory($admin_id);
           if(!empty($result))
           {
                $aray=array('status'=>'1','data'=>$result);
@@ -2236,7 +2166,7 @@ public function getRestaurantCategory_post()
       $data2=array();
       $data3=array();
       $data5=array();
-      $data4=array(); 
+      $data4=array();
       $result3=array();
       if(!empty($admin_id)&&!empty($cat_id))
       {
@@ -2353,19 +2283,15 @@ public function getRestaurantCategory_post()
                        $data=array();
 
                     }
-          }
+
           $result4=$this->Customer->getNaSubCatMenuItems($cat_id,$admin_id);
           if(!empty($result4))
           {
-                $data4['sub_cat_name']='Others';
-                $data4['sub_cat_id']='1';
-                if(!empty($result)){
-                    $j=$i;
-                }else{
-                  $j=0;
-                }                
+            $data4['sub_cat_name']='Others';
+            $data4['sub_cat_id']='1';
+            $j=$i;
             foreach($result4 as $value3)
-            {           
+            {
                             $data3['menu_name']=$value3['menu_name'];
                             $data3['menu_category_id']=$value3['menu_category_id'];
                             $gst3       =$this->Supervisor->getGst($value3['menu_category_id'],$admin_id);
@@ -2393,7 +2319,7 @@ public function getRestaurantCategory_post()
                                 $menu_full_price_gst3='';
                               }
                               $menufixprice3=$value3['menu_fix_price'];
-                              if(!empty($menufixprice3))
+                              if(!empty($menufixprice))
                               {
                                 $menu_fix_price3=$value3['menu_fix_price'];
                                 $menu_fix_price_gst3 =($menu_fix_price3)*$gst3/100;
@@ -2446,14 +2372,13 @@ public function getRestaurantCategory_post()
                             $data3['menu_full_price'] =  $menu_full_price3;
                             $data3['menu_fix_price'] =   $menu_fix_price3;
                             $data3['nutrient_counts'] =   $nutrient_counts3;
-                            $data3['gst'] =  "$gst3";
+                            $data3['gst'] =  "$gst";
                             $data3['menu_half_price_gst'] = "$menu_half_price_gst3";
                             $data3['menu_full_price_gst'] = "$menu_full_price_gst3";
                             $data3['menu_fix_price_gst'] =  "$menu_fix_price_gst3";          
                             $data3['message'] = 'Success';
                             $data3['status']  ='1';
                             $data4['foodItem'][]=$data3;
-                            $j=$j+1;
             }
           }
            if(!empty($data4))
@@ -2469,11 +2394,11 @@ public function getRestaurantCategory_post()
               echo json_output($response);
            }
            
-          // }else
-          // {
-          //   $arry['data']=array('status'=>'0','data'=>'failed');
-          //   $this->response($arry, 200);
-          // }
+          }else
+          {
+            $arry['data']=array('status'=>'0','data'=>'failed');
+            $this->response($arry, 200);
+          }
           
       }else
       {
@@ -2484,7 +2409,6 @@ public function getRestaurantCategory_post()
   }
   public function getCashFreeResponse_post()
 {
-
   date_default_timezone_set('Asia/kolkata'); 
   $order_id         =$this->input->post('order_id');
   $amount           =$this->input->post('amount');
@@ -2519,43 +2443,29 @@ public function getRestaurantCategory_post()
           $this->db->query($string2);
         }
         $result=$this->Customer->txnRecord($array);
-
         if(!empty($result))
           {
-                       
-                        $order_date         =date('Y-m-d',strtotime($this->Supervisor->getOrderDate($order_id)));
-                        $admin_id           =$this->Customer->getAdmin($order_id);
-                        $adminData          =$this->Customer->getAdminData($admin_id);
-                        $getCustmoerData    =$this->Customer->getCustmoerData($order_id,$admin_id);
-                        $order_id2          =str_replace($admin_id.'-','',$order_id);
-                        $custData           =$this->Customer->getCustData($getCustmoerData[0]['customer_mobile_no']);
-                        $notification_data   =$this->Supervisor->getWaiterNotification($getCustmoerData[0]['confirm_order_by']);
-                        $array_merge_recursive=array_merge_recursive($notification_data,array_merge_recursive($custData,$adminData));
-                        // echo '<pre>';print_r($array_merge_recursive);exit;
-                        foreach($array_merge_recursive as $notification)
+     
+                        $title ='OYLY';
+                        $order_date=date('Y-m-d',strtotime($this->Supervisor->getOrderDate($order_id)));
+                        $admin_id=$this->Customer->getAdmin($order_id);
+                        $order_id2=str_replace(str_replace('_','',$admin_id),$order_date,$order_id);
+                        $message ='Order Id '.$order_id2.' amount has been paid.';
+                        $notification_data=$this->Customer->getRestaurantStaffNotificationForPayment($admin_id);
+                        foreach($notification_data as $notification)
                             {
-                             if($notification['user_type']=='customer'){
-                                  $title ='Payment status';
-                                  $message ='Payment is compelete';
-                                  }else if($notification['user_type']=='Waiter'){
-                                  $title ='Payment status';
-                                  $message ='Payment done from table no '.$getCustmoerData[0]['table_no'];
-                                  }else if($notification['user_type']=='admin'){
-                                  $title ='Payment status';
-                                  $message ='Payment is compelete';
-                                  }
-                             $result=sendPushNotification($title,$message,$notification['notification_id']);
+                              $result=sendPushNotification($title,$message,$notification['notification_id']);
                               if($result)
                               {
                                 $array2[]=array(
                                         'mobile_no'=>$notification['mobile_no'],
                                         'admin_id'=>$admin_id,
                                         'status'=>1,
-                                        'order_id'=>$order_id2,
-                                        'table_no'=>$getCustmoerData[0]['table_no'],
+                                        'order_id'=>$order_id,
+                                        'table_no'=>$table_no,
                                         'title'=>$title,
                                         'message'=>$message,
-                                        'customer_mobile_no'=>$getCustmoerData[0]['customer_mobile_no'],
+                                        'customer_mobile_no'=>'',
                                         'date_time'=>date('Y-m-d H:i:s')
                                    ); 
                               }
@@ -2563,7 +2473,7 @@ public function getRestaurantCategory_post()
                            // echo '<pre>'; print_r($array2);exit;
                             if(!empty($array2))
                             {
-                              $this->Customer->insertNotification($array2);                          
+                              $this->Customer->insertNotification($array);                          
                             }
             $arry['data']=array('status'=>'1','data'=>'success');
                   $this->response($arry, 200);
@@ -2696,7 +2606,6 @@ public function getItemsForFeedback_post()
       {
         $string .= "'".$array_values[$i]."'".',';
       }
-       // print_r($string);exit;
           $result=$this->Customer->getMenuItemsForFeedback(rtrim($string,','));
           $arry=array('status'=>1,'result'=>$result);
           $this->response($arry, 200);
@@ -2828,68 +2737,5 @@ public function laterReview_post()
 
   }
 
-}
-  function getAllItemsOfPerticulatOrder_post()
-  {
-
-    try{
-      $order_array=array();
-      $sub_order_array=array();
-
-      if($this->form_validation->run('order_validation')==FALSE){
-
-            $arry=array('status'=>'0','data'=>'failed');
-            $this->response($arry, 200);
-      }else{
-        $order_id           =$_POST['order_id'];
-        $admin_id           =$_POST['admin_id'];
-        $OrderItemData      =$this->Supervisor->getOrderItems($order_id,$admin_id);
-        $subOrderItemData   =$this->Supervisor->getSubOrderItems($order_id,$admin_id);
-        $arry=array('status'=>'1','data'=>array_merge_recursive($OrderItemData, $subOrderItemData));
-        $this->response($arry, 200);
-      }
-    }catch(Ececption $e){
-      $e->getMessage();
-      $error = array('status' =>'0', "data" => "Internal Server Error - Please try Later.","StatusCode"=> "HTTP405");
-      $this->response($error, 200);
-    }
-
-  }
-
-  public function getRestaurantTypes_Post(){
-    try{
-      $result=$this->Customer->getRestaurantTypes();
-      if(!empty($result)){
-        echo json_encode(array('status'=>1,'data'=>$result));
-      }else{
-        echo json_encode(array('status'=>0,'data'=>'No record found.'));
-      }
-    }catch(Ececption $e){
-      $e->getMessage();
-      $error = array('status' =>'0', "data" => "Internal Server Error - Please try Later.","StatusCode"=> "HTTP405");
-      $this->response($error, 200);
-    }
-  }
-function checkLoginStatus_post(){
-  try{
-  $mobile_no    =$_POST['mobile_no'];
-  $device_id    =$_POST['device_id'];
-  $cus_id       =$_POST['cus_id'];
-  if(!empty($mobile_no)&&!empty($device_id)&& !empty($cus_id)){
-    $result=$this->Customer->checkLoginStatus($mobile_no,$device_id,$cus_id);
-        // print_r($result);exit;
-        if(!empty($result[0]['notification_id'])){
-          echo json_encode(array('status'=>1,'message'=>'success'));exit();
-        }else{
-          echo json_encode(array('status'=>0,'message'=>'logout success'));exit();
-        }
-  }else{
-    echo json_encode(array('status'=>0,'message'=>'logout success'));exit();
-  }
-  }catch(Ececption $e){
-      $e->getMessage();
-      $error = array('status' =>'0', "data" => "Internal Server Error - Please try Later.","StatusCode"=> "HTTP405");
-      $this->response($error, 200);
-  }
 }
 }

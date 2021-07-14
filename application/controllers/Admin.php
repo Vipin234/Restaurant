@@ -27,7 +27,7 @@ class Admin extends CI_Controller
 			$session_data=$this->session->all_userdata();
 			$result['emenities']=$this->Admin_model->getAmenities();
 			$result['food_type']=$this->Admin_model->getFoodType();
-      // $result['misc_category']=$this->Menu_model->getMenuCategory();
+      $result['rest_type']=$this->Admin_model->getRestaurantTypes();
 			$this->load->view('header',$session_data);
 			$this->load->view('leftSidebar',$session_data);
 			$this->load->view('dashboard',$result);
@@ -117,6 +117,7 @@ class Admin extends CI_Controller
       $end_time                 =$_POST['end_time'];
       $amenities                =implode(",",$_POST['amenities']);
       $food_type                =implode(",",$_POST['food_type']);
+      $service                  =$_POST['service'];
       $city                     =$_POST['city'];
       $imageName                =$_POST['imageName'];
       if(!empty($imageName))
@@ -201,6 +202,19 @@ class Admin extends CI_Controller
                         $i=$i+1;
                       }
                       $this->Admin_model->insertGstDetails($array);
+                      for($i=0;$i<count($service);$i++){
+                          $services[]=array(
+                                  'admin_id'      =>'ADMIN_0000'.($max+1),
+                                  'type_id'       =>$service[$i],
+                                  'status'        =>1,
+                                  'creation_date' =>date('Y-m-d H:i:s'),
+
+                        );
+                        // $i=$i+1;
+                      }
+                      if(!empty($services)){
+                      $this->Admin_model->addService($services);
+                      }
                       $arry=array('status'=>'1','message'=>'Restaurant added successfully.');
                       echo json_encode($arry);exit;
                    }else
@@ -286,10 +300,19 @@ class Admin extends CI_Controller
                          $string .= "'".$value['cat_id']."'".',';
                       }
                   }
-
             $catResult=$this->Supervisor->getRestaurantCategory($admin_id,rtrim($string,','));
+            $Services=$this->Admin_model->getServices($admin_id);
+            $string2='';
+            if(!empty($Services))
+            {
+                  foreach($Services AS $service)
+                {
 
-            echo json_encode(array('status'=>1,'result'=>$resultant,'carResult'=>$catResult));exit;
+                   $string2 .= "".$service['type_id']."".',';
+                }
+            }
+            $serviceString=explode(',',rtrim($string2,','));
+            echo json_encode(array('status'=>1,'result'=>$resultant,'carResult'=>$catResult,'services'=>$serviceString));exit;
           }
           else
           {
@@ -326,6 +349,7 @@ class Admin extends CI_Controller
       $city                   =$_POST['city'];
       $admin_id               =$_POST['admin_id'];
       $imageName              =$_POST['imageName'];
+      $service                =$_POST['service'];
 
       if(!empty($imageName))
       {
@@ -374,6 +398,21 @@ class Admin extends CI_Controller
                           );
       // echo '<pre>';print_r($restau_array+$img_array);exit;
       $result=$this->Admin_model->updateRestaurant($admin_id,($restau_array+$img_array),$admin_array);
+       for($i=0;$i<count($service);$i++){
+                  $services[]=array(
+                          'admin_id'      =>$admin_id,
+                          'type_id'        =>$service[$i],
+                          'status'        =>1,
+                          'creation_date' =>date('Y-m-d H:i:s'),
+
+                );
+                // $i=$i+1;
+              }
+    // print_r($services);exit;
+    if(!empty($services)){
+              $this->Admin_model->removeService($admin_id);
+              $this->Admin_model->addService($services);
+              }
       if($result)
       {
          echo json_encode(array('status'=>1,'message'=>'Updated successfully'));exit;
@@ -488,6 +527,12 @@ class Admin extends CI_Controller
         {
             $data['inputerror'][] = 'food_type';
             $data['error_string'][] = 'Food is required';
+            $data['status'] = FALSE;
+        }
+         if($this->input->post('service') == '')
+        {
+            $data['inputerror'][] = 'restaurant_service';
+            $data['error_string'][] = 'Service is required';
             $data['status'] = FALSE;
         }
         if($data['status'] === FALSE)

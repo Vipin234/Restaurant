@@ -215,7 +215,6 @@ public function admin_registration_post()
   $email=$this->input->post('email');
   $device_id=$this->input->post('device_id');
   $notification_id=$this->input->post('notification_id');
-  $city=$this->input->post('city');
   // $user_password=$this->input->post('user_password');
   date_default_timezone_set('Asia/kolkata'); 
   $now = date('Y-m-d H:i:s');
@@ -223,10 +222,11 @@ public function admin_registration_post()
   $data->mobile_no=$mobile_no;
   $data->email=$user_email;
   $data->user_createdate=$now;
-  
+
   $que=$this->db->query("select * from tbl_admin where mobile_no='".$mobile_no."'");
 
   $quedata=$this->db->query("select * from tbl_restaurant_staff_registration where mobile_no='".$mobile_no."'");
+
 
   $master_user=$this->db->query("select * from master_user where mobile_no='".$mobile_no."'");
 
@@ -264,8 +264,6 @@ public function admin_registration_post()
   }
   else
   {
-    if(!empty($city)){
-
     date_default_timezone_set('Asia/kolkata'); 
     $now = date('Y-m-d H:i:s');
     $saltArray   = array(
@@ -285,44 +283,22 @@ public function admin_registration_post()
     $data->user_active='1';
     $data->user_createdate=$now;
     $data->status='1';
-    $prefixResult=$this->Supervisor->getPrefix($city);
-    // echo "<pre>";print_r($prefixResult);exit;
-    if(!empty($prefixResult)){
-    $city_prefix=$prefixResult[0]['city_prefix'];
-    $state_prefix=$prefixResult[0]['state_prefix'];
-    $maxAdmin=$this->Supervisor->getMaxAdminData($city_prefix,$state_prefix);
-    if($maxAdmin[0]['admin_id'] <=9){
-      $admin_id=$state_prefix.$city_prefix.'0000'.($maxAdmin[0]['admin_id']+1);
-    }else if($maxAdmin[0]['admin_id'] >=9 && $maxAdmin[0]['admin_id'] <=99){
-      $admin_id=$state_prefix.$city_prefix.'000'.($maxAdmin[0]['admin_id']+1);
-    }else if($maxAdmin[0]['admin_id'] >=99 && $maxAdmin[0]['admin_id'] <=999){
-       $admin_id=$state_prefix.$city_prefix.'00'.($maxAdmin[0]['admin_id']+1);
-    }else if($maxAdmin[0]['admin_id'] >=999 && $maxAdmin[0]['admin_id'] <=9999){
-      $admin_id=$state_prefix.$city_prefix.'0'.($maxAdmin[0]['admin_id']+1);
-    }
-    }else{
-      $data2->status ='0';
-      $data2->message = 'Please enter correct city name.';
-      array_push($result2,$data2);
-      $response->data = $data2;
-      echo  json_output($response);
-    }
-     // echo "<pre>";print_r($admin_id);exit;
-    $data->admin_id=$admin_id;
-    $result=$this->Supervisor->admin_registration($data);
+    $result = $this->Supervisor->admin_registration($data);
+    $alphanumerric='ADMIN_0000'.$result;
     $data1->device_id = $device_id;
     $data1->notification_id = $notification_id;
     $data1->login_time=$now;
     $data1->name=$name;
     $data1->mobile_no=$mobile_no;
     $data1->user_type='admin';
-    $res=$this->Supervisor->manage_login_data($data1);
+    $updatedata = $this->Supervisor->update_admin_id($alphanumerric,$result);
+    $res = $this->Supervisor->manage_login_data($data1);
     if(!empty($result))
     {  
       $data2->name=$name;
       $data2->mobile_no=$mobile_no;
       $data2->user_type='admin';
-      $data2->admin_id=$admin_id;
+      $data2->admin_id=$alphanumerric;
       $data2->status ='1';
       $data2->message = 'register Successfully';
       array_push($result2,$data2);
@@ -335,17 +311,9 @@ public function admin_registration_post()
       array_push($result2,$data2);
       $response->data = $data2;
     }
-     echo  json_output($response);
   }
-  else{
-      $data2->status ='0';
-      $data2->message = 'You are not service able area.We will provide service in your area comming soon.';
-      array_push($result2,$data2);
-      $response->data = $data2;
-      echo  json_output($response);
-}
-}
- echo  json_output($response);
+
+  echo  json_output($response);
 }
 /*.........Admin  Registration  Api  ---- */
 
@@ -1241,6 +1209,7 @@ public function add_order_detail_waiter_for_restaurant_post()
   $data->date=$now1;
   $data->status='2';
   $que=$this->db->query("select * from tbl_order_detail_for_restaurant where table_no='".$table_no."' and order_status NOT IN('Closed','Rejected') and admin_id='$admin_id' and payment_status!='1'");
+
   $row = $que->num_rows();
   if($row>0)
   {
@@ -1248,37 +1217,50 @@ public function add_order_detail_waiter_for_restaurant_post()
     $data1->message = 'This table is already book.';
     array_push($result2,$data1);
     $response->data = $data1;
-     echo  json_output($response);
-
   }
   else
   {
-    $prvDate=$this->Supervisor->getPrvOrderDate($admin_id);
-    // print_r($prvDate);exit;
-    $getMaxOrderId=$this->Supervisor->getMaxOrderId($admin_id,$prvDate[0]['date']);
+    $updated=$this->Supervisor->add_order_detail_for_waiter($data);
+    $getMaxOrderId=$this->Supervisor->getMaxOrderId($admin_id);
     $result =empty($getMaxOrderId)?'1':$getMaxOrderId;
     //print_r( $result);exit;
-    if($result <= 9){
-      $alphanumerric=$admin_id.'-'.substr(str_replace('-', '',date('Y-m-d')),2).'000'.$result;
-    }else if($result >= '9' && $result <= '99'){
-      $alphanumerric=$admin_id.'-'.'00'.substr(str_replace('-', '',date('Y-m-d')),2).$result;
-    }else if($result >= '99' && $result <= '999'){
-     $alphanumerric=$admin_id.'-'.substr(str_replace('-', '',date('Y-m-d')),2).'0'.$result;
-    }else
-      $alphanumerric=$admin_id.'-'.$result;
+    if($result <= 9)
+    {
+      $new_admin=str_replace("_","","$admin_id").'-';
+      $alphanumerric=$new_admin.'000'.$result;
+
+    }else if($result >= '9' && $result <= '99')
+    {
+      $new_admin=str_replace("_","","$admin_id").'-';
+      $alphanumerric=$new_admin.'00'.$result;
+
+    }else if($result >= '99' && $result <= '999')
+    {
+      $new_admin=str_replace("_","","$admin_id").'-';
+      $alphanumerric=$new_admin.'0'.$result; 
     }
-    $data->order_id=$alphanumerric;
-    $updated=$this->Supervisor->add_order_detail_for_waiter($data);
+    else
+    {
+      $new_admin=str_replace("_","","$admin_id").'-';
+      $alphanumerric=$new_admin.$result;
+    }
+    // print_r($alphanumerric);exit;
+    $update_order_detail = $this->Supervisor->update_order_waiter_id($alphanumerric,$updated);
     if(!empty($result))
     {  
+
+
       $menu_item_array      =explode(",",rtrim($menu_item_name,","));
       $menu_price           =explode(",",rtrim($menu_price,","));
       $quantity             =explode(",",rtrim($quantity,","));
       $menu_ids             =explode(",",rtrim($menu_id,","));
       $half_and_full_status =explode(",",rtrim($half_and_full_status,","));
       $gst_amount_array     =explode(",",rtrim($gst_amount,","));
+
+
       for($i=0;$i<count($menu_item_array);$i++)
       {
+
         $insert_array[]=array(
           'menu_item_name'=>$menu_item_array[$i],
           'quantity'=>$quantity[$i],
@@ -1295,7 +1277,7 @@ public function add_order_detail_waiter_for_restaurant_post()
       }
               // print_r($insert_array);exit;
       $this->Supervisor->insertBatchOrder($insert_array);
-      $order_id           =$alphanumerric;
+      $order_id=$alphanumerric;
       $staffData1         =$this->Supervisor->getStaffNotification($admin_id,'KOT');
       $getCustmoerData    =$this->Supervisor->getCustmoerData($order_id,$admin_id);
       $custData           =$this->Supervisor->getCustData($getCustmoerData[0]['customer_mobile_no']);
@@ -1303,7 +1285,6 @@ public function add_order_detail_waiter_for_restaurant_post()
       $adminData          =$this->Supervisor->getAdminData($admin_id);
       $order_date         =date('Y-m-d',strtotime($this->Supervisor->getOrderDate($order_id)));
       $waiterData         =$this->Supervisor->getwaiterData($waiter_mobile_no);
-      $order_id2          =str_replace($admin_id.'-','',$order_id);
       $array_merge_recursive=array_merge_recursive($adminData,array_merge_recursive($custData,array_merge_recursive($staffData1,$staffData2)));
       // echo "<pre>";print_r($array_merge_recursive);exit;
       foreach($array_merge_recursive as $notification){
@@ -1312,13 +1293,13 @@ public function add_order_detail_waiter_for_restaurant_post()
               $message ='Your order for table no '.$table_no.' has been placed.';
               }else if($notification['user_type']=='KOT'){
               $title ='OYLY';
-              $message ='Table no '.$table_no.' ('.$waiterData[0]['name'].')'.' Confirmed order';
+              $message ='Table No '.$table_no.' ('.$waiterData[0]['name'].')'.' Confirmed order';
               }else if($notification['user_type']=='Supervisor'){
               $title ='OYLY';
-              $message ='table no '.$table_no.' order id '. $order_id2.' placed an order.';
+              $message ='table No '.$table_no.' order id '. $order_id.' placed an order.';
               }else if($notification['user_type']=='admin'){
               $title ='OYLY';
-              $message ='Order has been created for table no '.$table_no;
+              $message ='Order has been created for table '.$table_no;
               }
                $result=sendPushNotification($title,$message,$notification['notification_id']);
                if(!empty($result))
@@ -1328,7 +1309,7 @@ public function add_order_detail_waiter_for_restaurant_post()
                 'staff_mobile_no'=>$notification['mobile_no'],
                 'admin_id'=>$admin_id,
                 'status'=>1,
-                'order_id'=>$order_id2,
+                'order_id'=>$order_id,
                 'table_no'=>$table_no,
                 'title'=>$title ,
                 'message'=>$message,
@@ -1341,6 +1322,7 @@ public function add_order_detail_waiter_for_restaurant_post()
                 }  
         }  
       }
+ 
       $data2->status ='1';
       $data2->message = 'success';
       array_push($result2,$data2);
@@ -1353,6 +1335,9 @@ public function add_order_detail_waiter_for_restaurant_post()
       array_push($result2,$data2);
       $response->data = $data2;
     }
+  }
+
+
 
   echo  json_output($response);
 }
@@ -1469,7 +1454,7 @@ public function change_order_for_particular_customer_post()
       $custData           =$this->Supervisor->getCustData($getCustmoerData[0]['customer_mobile_no']);
       $staffData2         =$this->Supervisor->getStaffNotification($admin_id,'Supervisor');
       $adminData          =$this->Supervisor->getAdminData($admin_id);
-      $order_id2          =str_replace($admin_id.'-','',$order_id);
+      $order_date         =date('Y-m-d',strtotime($this->Supervisor->getOrderDate($order_id)));
       $waiterData         =$this->Supervisor->getwaiterData($waiter_mobile_no);
       $array_merge_recursive=array_merge_recursive($adminData,array_merge_recursive($custData,array_merge_recursive($staffData1,$staffData2)));
       // echo "<pre>";print_r($notification_data);exit;
@@ -1480,14 +1465,14 @@ public function change_order_for_particular_customer_post()
 
               }else if($notification['user_type']=='Supervisor'){
               $title ='OYLY';
-              $message ='table no '.$table_no.'order id '.$order_id2.' has been more item placed.';
+              $message ='table No '.$table_no.'order id '.$order_id.' placed an order.';
               }else if($notification['user_type']=='admin'){
               $title ='OYLY';
-              $message ='More item has been placed for table '.$table_no;
+              $message ='Order has been created for table '.$table_no;
               }
               else if($notification['user_type']=='KOT'){
               $title ='OYLY';
-              $message ='Table no '.$getCustmoerData[0]['table_no'].' ('.$waiterData[0]['name'].')'.' Confirmed order';
+              $message ='Table No '.$getCustmoerData[0]['table_no'].' ('.$waiterData[0]['name'].')'.' Confirmed order';
               }
                $result=sendPushNotification($title,$message,$notification['notification_id']);
                if(!empty($result))
@@ -1497,8 +1482,7 @@ public function change_order_for_particular_customer_post()
                 'staff_mobile_no'=>$notification['mobile_no'],
                 'admin_id'=>$admin_id,
                 'status'=>1,
-                'order_id'=>$order_id2,
-                'sub_order_id'=>$sub_order_id,
+                'order_id'=>$order_id,
                 'table_no'=>$getCustmoerData[0]['table_no'],
                 'title'=>$title ,
                 'message'=>$message,
@@ -1590,8 +1574,9 @@ public function get_order_detail_for_restaurant_post()
     $result['table_no']     =$data[$i]['table_no'];
     $result['order_status'] =$data[$i]['order_status'];
     $result['admin_id']     =$data[$i]['admin_id'];
-    $result['new_order_id'] =str_replace($data[$i]['admin_id'].'-','',$data[$i]['order_id']);
+    $result['new_order_id']=str_replace(str_replace('_','',$data[$i]['admin_id']),$data[$i]['date'],$data[$i]['order_id']);
     $menuResult =$this->Supervisor->getMenuItemForOrder($data[$i]['order_id'],$admin_id);
+
     foreach($menuResult as $menuValue)
     {
       $menuImages[]               =$menuValue['menu_item_name'];
@@ -1603,8 +1588,9 @@ public function get_order_detail_for_restaurant_post()
       $menu_order_id[]            =$data[$i]['order_id'];
       $menu_order_table[]         =$data[$i]['table_no'];
       $main_order_status[]        =$data[$i]['status'];
+
     }
-    // print_r(implode(',',$menuImages).',');exit;
+                // print_r(implode(',',$menuImages).',');exit;
     $result['menu_order_id']                =implode(',',$menu_order_id).',';
     $result['menu_order_table']                =implode(',',$menu_order_table).',';
     $result['id']                =implode(',',$menumenu_id).',';
@@ -1757,8 +1743,11 @@ public function get_food_type_post()
     $data['food_type'] =   $row['food_type'];
     $data['message'] = 'Success';
     $data['status']  ='1';
+
     array_push($result,$data);
+
   } 
+
   $response->data = $result;
 }
 else
@@ -1864,7 +1853,8 @@ public function confirm_order_by_waiter_post()
           $waiterData         =$this->Supervisor->getwaiterData($waiter_mobile_no);
           $staffData          =$this->Supervisor->getStaffNotification($admin_id,'KOT');
           $getCustmoerData    =$this->Supervisor->getCustmoerData($order_id,$admin_id);
-          $order_id2          =str_replace($admin_id.'-','',$order_id);
+          $order_date         =date('Y-m-d',strtotime($this->Supervisor->getOrderDate($order_id)));
+          $order_id2          =str_replace(str_replace('_','',$admin_id),$order_date,$order_id);
           $title              ='Order Status';
           $message            ='Table No '.$getCustmoerData[0]['table_no'].' ('.$waiterData[0]['name'].')'.' Confirmed order';
           $result=sendPushNotification($title,$message,$staffData[0]['notification_id']);
@@ -1875,7 +1865,7 @@ public function confirm_order_by_waiter_post()
                                 'staff_mobile_no'=>$staffData[0]['mobile_no'],
                                 'admin_id'=>$admin_id,
                                 'status'=>1,
-                                'order_id'=>$order_id2,
+                                'order_id'=>$order_id,
                                 'table_no'=>$getCustmoerData[0]['table_no'],
                                 'title'=>$title ,
                                 'message'=>$message,
@@ -1996,7 +1986,8 @@ public function order_complete_by_chef_post()
           $notification_data     =$this->Supervisor->getWaiterNotification($waiter_mobile_no);
           $getCustmoerData       =$this->Supervisor->getCustmoerData($order_id,$admin_id);
           $custData              =$this->Supervisor->getCustData($getCustmoerData[0]['customer_mobile_no']);
-          $order_id2             =str_replace($admin_id.'-','',$order_id);
+          $order_date            =date('Y-m-d',strtotime($this->Supervisor->getOrderDate($order_id)));
+          $order_id2             =str_replace(str_replace('_','',$admin_id),$order_date,$order_id);
           $array_merge_recursive=array_merge_recursive($notification_data,$custData);
           // echo "<pre>";print_r($array_merge_recursive);exit;
           foreach($array_merge_recursive as $notification){
@@ -2015,7 +2006,7 @@ public function order_complete_by_chef_post()
                                 'staff_mobile_no'=>$notification['mobile_no'],
                                 'admin_id'=>$admin_id,
                                 'status'=>1,
-                                'order_id'=>$order_id2,
+                                'order_id'=>$order_id,
                                 'table_no'=>$getCustmoerData[0]['table_no'],
                                 'title'=>$title ,
                                 'message'=>$message,
@@ -2066,7 +2057,8 @@ public function create_slip_supervisor_for_chef_post()
     // {
 
           $this->Supervisor->prepareAllOrder($order_id,$admin_id,'Confirm');
-          $order_id2               =str_replace($admin_id.'-','',$order_id);
+          $order_date               =date('Y-m-d',strtotime($this->Supervisor->getOrderDate($order_id)));
+          $order_id2                =str_replace(str_replace('_','',$admin_id),$order_date,$order_id);
           $title                    ='Order Status';
           $staffData                =$this->Supervisor->getStaffNotification($admin_id,'Chef');
           $getCustmoerData          =$this->Supervisor->getCustmoerData($order_id,$admin_id);         
@@ -2083,7 +2075,7 @@ public function create_slip_supervisor_for_chef_post()
                           'staff_mobile_no'=>$staffData[0]['mobile_no'],
                           'admin_id'=>$admin_id,
                           'status'=>1,
-                          'order_id'=>$order_id2,
+                          'order_id'=>$order_id,
                           'table_no'=>$getCustmoerData[0]['table_no'],
                           'title'=>$title ,
                           'message'=>$message,
@@ -2145,7 +2137,8 @@ public function delete_order_for_restaurant_post()
     }else{
       $notificationData   =$this->Supervisor->getRestaurantStaffNotification($admin_id,$getCustmoerData[0]['order_delete_by']);
     }
-    $order_id2          =str_replace($admin_id.'-','',$order_id);
+    $order_date=date('Y-m-d',strtotime($this->Supervisor->getOrderDate($order_id)));
+    $order_id2=str_replace(str_replace('_','',$admin_id),$order_date,$order_id);
     $notification_data=array_merge_recursive($custData,array_merge_recursive($notificationData,$adminData),$supervisorData);
     // echo "<Pre>";print_r($notification_data);exit;
     $title ='Order Status';
@@ -2159,7 +2152,7 @@ public function delete_order_for_restaurant_post()
                           'staff_mobile_no'=>$notification['mobile_no'],
                           'admin_id'=>$admin_id,
                           'status'=>1,
-                          'order_id'=>$order_id2,
+                          'order_id'=>$order_id,
                           'table_no'=>$getCustmoerData[0]['table_no'],
                           'title'=>$title,
                           'message'=>$message,
@@ -2215,9 +2208,9 @@ public function update_payment_for_customer_by_staff_post()
           $admin_id           =$this->Supervisor->getAdmin($order_id);
           $adminData          =$this->Supervisor->getAdminData($admin_id);
           $getCustmoerData    =$this->Supervisor->getCustmoerData($order_id,$admin_id);
-          $order_id2         =str_replace($admin_id.'-','',$order_id);
-          $custData          =$this->Supervisor->getCustData($getCustmoerData[0]['customer_mobile_no']);
-          $waiterData        =$this->Supervisor->getRestaurantStaffNotification($admin_id,$getCustmoerData[0]['confirm_order_by']);
+          $order_id2          =str_replace(str_replace('_','',$admin_id),$order_date,$order_id);
+          $custData           =$this->Supervisor->getCustData($getCustmoerData[0]['customer_mobile_no']);
+          $waiterData         =$this->Supervisor->getRestaurantStaffNotification($admin_id,$getCustmoerData[0]['confirm_order_by']);
           $array_merge_recursive=array_merge_recursive($adminData,array_merge_recursive($custData,$waiterData));
           // echo '<pre>';print_r($array_merge_recursive);exit;
           foreach($array_merge_recursive as $notification)
@@ -2239,7 +2232,7 @@ public function update_payment_for_customer_by_staff_post()
                           'mobile_no'=>$notification['mobile_no'],
                           'admin_id'=>$admin_id,
                           'status'=>1,
-                          'order_id'=>$order_id2,
+                          'order_id'=>$order_id,
                           'table_no'=>$getCustmoerData[0]['table_no'],
                           'title'=>$title,
                           'message'=>$message,
@@ -2552,13 +2545,16 @@ public function get_notification_list_for_order_post()
   {
    foreach ($get_notification_data as $row)
    {
-    $data['order_id']=$row['order_id'];
+    // $data['order_id'] =   $row['order_id'];
+    $data['order_id']=str_replace(str_replace('_','',$row['admin_id']),date('Y-m-d', strtotime($row['date_time'])),$row['order_id']);
     $data['customer_mobile_no'] =   $row['customer_mobile_no'];
     $data['date_time'] =   $row['date_time'];
     $data['title'] =   $row['title'];
     $data['message'] =   $row['message'];
     $data['status']  ='1';
+
     array_push($result,$data);
+
   } 
 
   $response->data = $result;
@@ -2664,6 +2660,39 @@ public function gst_amount_detail_for_staff_post()
   }  
   echo json_output($response);
 }
+
+public function get_detail_for_particular_order_for_staff_post()
+{
+  $response   =   new StdClass();
+  $response1   =   new StdClass();
+  $result       =   array();
+  $order_id=$this->input->post('order_id');
+  $data = $this->Supervisor->getGroupDatas($order_id);
+  $arr = array();
+  if(empty($data))
+  {
+    $response->status = 0;
+    $response->message = "failed";
+         //$response->data = $arr;
+  }
+  else
+  {
+    for($i=0;$i<count($data);$i++)
+    {
+      $result['order_id'] = $data[$i]['order_id'];
+      $result['data'] = $this->Supervisor->getDataOrderWises($data[$i]['order_id']);
+      array_push($arr, $result);
+
+    }
+    $response->status = 1;
+    $response->message = "success";
+    $response->data = $arr;
+
+  }
+
+  echo json_output($response);
+}
+
 public function update_sub_order_by_waiter_post()
 {
 
@@ -2711,7 +2740,8 @@ public function update_sub_order_by_waiter_post()
       $adminData          =$this->Supervisor->getAdminData($admin_id);
       $supervisorData     =$this->Supervisor->getSupervisordata($admin_id);
       $notificationData   =$this->Supervisor->getRestaurantStaffNotification($admin_id,$getCustmoerData[0]['order_delete_by']);
-      $order_id2         =str_replace($admin_id.'-','',$order_id);
+      $order_date=date('Y-m-d',strtotime($this->Supervisor->getOrderDate($order_id)));
+      $order_id2=str_replace(str_replace('_','',$admin_id),$order_date,$order_id);
       $notification_data=array_merge_recursive($custData,array_merge_recursive($notificationData,$adminData),$supervisorData);
       // echo "<Pre>";print_r($notification_data);exit;
       $title ='Sub Order Status';
@@ -2765,8 +2795,9 @@ else if($status==2 || $status==3 || $status==5)
 
       $waiterData         =$this->Supervisor->getwaiterData($waiter_mobile_no);
       $getCustmoerData    =$this->Supervisor->getCustmoerData($order_id,$admin_id);
+      $order_date         =date('Y-m-d',strtotime($this->Supervisor->getOrderDate($order_id)));
       $staffData          =$this->Supervisor->getStaffNotification($admin_id,'KOT');
-      $order_id2          =str_replace($admin_id.'-','',$order_id);
+      $order_id2          =str_replace(str_replace('_','',$admin_id),$order_date,$order_id);
       $custData           =$this->Customer->getCustData($getCustmoerData[0]['customer_mobile_no']);
       $title              ='Sub Order Status';
       $message            ='Table No '.$getCustmoerData[0]['table_no'].' ('.$waiterData[0]['name'].')'.' Confirmed order';
@@ -2778,7 +2809,7 @@ else if($status==2 || $status==3 || $status==5)
                     'staff_mobile_no'=>$staffData[0]['mobile_no'],
                     'admin_id'=>$admin_id,
                     'status'=>1,
-                    'order_id'=>$order_id2,
+                    'order_id'=>$order_id,
                     'sub_order_id'=>$sub_order_id,
                     'table_no'=>$getCustmoerData[0]['table_no'],
                     'title'=>$title ,
@@ -2837,7 +2868,8 @@ public function sub_order_create_slip_supervisor_for_chef_post()
     {
 
 
-          $order_id2                =str_replace($admin_id.'-','',$order_id);
+          $order_date               =date('Y-m-d',strtotime($this->Supervisor->getOrderDate($order_id)));
+          $order_id2                =str_replace(str_replace('_','',$admin_id),$order_date,$order_id);
           $title                    ='Sub Order Status';
           $staffData                =$this->Supervisor->getStaffNotification($admin_id,'Chef');
           $getCustmoerData          =$this->Supervisor->getCustmoerData($order_id,$admin_id);
@@ -2854,7 +2886,7 @@ public function sub_order_create_slip_supervisor_for_chef_post()
                           'staff_mobile_no'=>$staffData[0]['mobile_no'],
                           'admin_id'=>$admin_id,
                           'status'=>1,
-                          'order_id'=>$order_id2,
+                          'order_id'=>$order_id,
                           'table_no'=>$getCustmoerData[0]['table_no'],
                           'title'=>$title ,
                           'message'=>$message,
@@ -2907,7 +2939,8 @@ public function sub_order_complete_by_chef_post()
           $notificationData      =$this->Supervisor->getWaiterNotification($waiter_mobile_no);
           $getCustmoerData       =$this->Supervisor->getCustmoerData($order_id,$admin_id);
           $custData              =$this->Supervisor->getCustData($getCustmoerData[0]['customer_mobile_no']);
-          $order_id2             =str_replace($admin_id.'-','',$order_id);
+          $order_date            =date('Y-m-d',strtotime($this->Supervisor->getOrderDate($order_id)));
+          $order_id2             =str_replace(str_replace('_','',$admin_id),$order_date,$order_id);
           $array_merge_recursive=array_merge_recursive($custData,$notificationData);
           // echo "<pre>";print_r($array_merge_recursive);exit;
           foreach( $array_merge_recursive as $notification){
@@ -2925,7 +2958,7 @@ public function sub_order_complete_by_chef_post()
                             'staff_mobile_no'=>$notification['mobile_no'],
                             'admin_id'=>$admin_id,
                             'status'=>1,
-                            'order_id'=>$order_id2,
+                            'order_id'=>$order_id,
                             'sub_order_id'=>$sub_order_id,
                             'table_no'=>$getCustmoerData[0]['table_no'],
                             'title'=>$title ,
@@ -2971,7 +3004,8 @@ public function completeOrderByWaiter_post()
           $staffData          =$this->Supervisor->getStaffNotification($admin_id,'Cashier');
           $supervisorData     =$this->Supervisor->getSupervisordata($admin_id);
           $getCustmoerData    =$this->Supervisor->getCustmoerData($order_id,$admin_id);
-          $order_id2         =str_replace($admin_id.'-','',$order_id);
+          $order_date         =date('Y-m-d',strtotime($this->Supervisor->getOrderDate($order_id)));
+          $order_id2          =str_replace(str_replace('_','',$admin_id),$order_date,$order_id);
           $array_merge_recursive=array_merge_recursive($supervisorData,$staffData);
           // echo '<pre>';print_r($array_merge_recursive);exit;
           foreach($array_merge_recursive as $notification){
@@ -2993,7 +3027,7 @@ public function completeOrderByWaiter_post()
                             'staff_mobile_no'=>$notification['mobile_no'],
                             'admin_id'=>$admin_id,
                             'status'=>1,
-                            'order_id'=>$order_id2,
+                            'order_id'=>$order_id,
                             'table_no'=>$getCustmoerData[0]['table_no'],
                             'title'=>$title ,
                             'message'=>$message,
@@ -3045,7 +3079,7 @@ public function generateInvoiceOrderBycashier_post()
       $arry['order_id']=$value['order_id'];
       $arry['admin_id']=$value['admin_id'];
       $arry['table_no']=$value['table_no'];
-      $arry['new_order_id']=str_replace($value['admin_id'].'-','',$value['order_id']);
+      $arry['new_order_id']=str_replace(str_replace('_','',$value['admin_id']),$value['date'],$value['order_id']); 
       $OrderGstResult   =$this->Supervisor->getGstInforForOrder($value['order_id'],$value['admin_id']);
              
       foreach($OrderGstResult as $value3)
@@ -3223,7 +3257,8 @@ public function generateInvoiceOrderBycashier_post()
       if($insetedId)
       {
             $getCustmoerData            =$this->Supervisor->getCustmoerData($order_id,$admin_id);
-            $order_id2                  =str_replace($admin_id.'-','',$order_id);
+            $order_date                 =date('Y-m-d',strtotime($this->Supervisor->getOrderDate($order_id)));
+            $order_id2                  =str_replace(str_replace('_','',$admin_id),$order_date,$order_id);
             $custData                   =$this->Supervisor->getCustData($getCustmoerData[0]['customer_mobile_no']);
             $notification_data          =$this->Supervisor->getWaiterNotification($getCustmoerData[0]['confirm_order_by']);
             $array_merge_recursive=array_merge_recursive($notification_data,$custData);
@@ -3244,7 +3279,7 @@ public function generateInvoiceOrderBycashier_post()
                     'staff_mobile_no'=>$notification['mobile_no'],
                     'admin_id'=>$admin_id,
                     'status'=>1,
-                    'order_id'=>$order_id2,
+                    'order_id'=>$order_id,
                     'table_no'=>$getCustmoerData[0]['table_no'],
                     'title'=>$title,
                     'message'=>$message,
@@ -3326,9 +3361,9 @@ public function deleteItemForOrder_post()
           $staffData1         =$this->Supervisor->getWaiterNotification($getCustmoerData[0]['confirm_order_by']);
           $staffData2         =$this->Supervisor->getStaffNotification($admin_id,'KOT');
           $custData           =$this->Supervisor->getCustData($getCustmoerData[0]['customer_mobile_no']);
-          $order_id2          =str_replace($admin_id.'-','',$order_id);
-          $supervisorData     =$this->Supervisor->getStaffNotification($admin_id,'Supervisor');
-          $array_merge_recursive=array_merge_recursive($custData,array_merge_recursive($staffData1,$staffData2),$supervisorData);
+          $order_date         =date('Y-m-d',strtotime($this->Supervisor->getOrderDate($order_id)));
+          $order_id2          =str_replace(str_replace('_','',$admin_id),$order_date,$order_id);
+          $array_merge_recursive=array_merge_recursive($custData,array_merge_recursive($staffData1,$staffData2));
           // echo '<pre>';print_r($array_merge_recursive);exit;
           foreach($array_merge_recursive as $notification){
               if($notification['user_type']=='customer'){
@@ -3340,9 +3375,6 @@ public function deleteItemForOrder_post()
                   }else if($notification['user_type']=='KOT'){
                   $title ='OYLY';
                   $message ='table No '.$getCustmoerData[0]['table_no'].' item not available';
-                  }else if($notification['user_type']=='Supervisor'){
-                    $title ='OYLY';
-                    $message ='table No '.$getCustmoerData[0]['table_no'].' item not available';
                   }
               $result=sendPushNotification($title,$message,$notification['notification_id']);
                 if(!empty($result))
@@ -3352,7 +3384,7 @@ public function deleteItemForOrder_post()
                                 'staff_mobile_no'=>$notification['mobile_no'],
                                 'admin_id'=>$admin_id,
                                 'status'=>1,
-                                'order_id'=>$order_id2,
+                                'order_id'=>$order_id,
                                 'table_no'=>$getCustmoerData[0]['table_no'],
                                 'title'=>$title ,
                                 'message'=>$message,
@@ -3461,9 +3493,9 @@ public function deleteItemForSubOrder_post()
                 $staffData1         =$this->Supervisor->getWaiterNotification($getCustmoerData[0]['confirm_order_by']);
                 $staffData2         =$this->Supervisor->getStaffNotification($admin_id,'KOT');
                 $custData           =$this->Supervisor->getCustData($getCustmoerData[0]['customer_mobile_no']);
-                $order_id2          =str_replace($admin_id.'-','',$order_id);
-                $supervisorData     =$this->Supervisor->getStaffNotification($admin_id,'Supervisor');
-                $array_merge_recursive=array_merge_recursive($custData,array_merge_recursive($staffData1,$staffData2),$supervisorData);
+                $order_date         =date('Y-m-d',strtotime($this->Supervisor->getOrderDate($order_id)));
+                $order_id2          =str_replace(str_replace('_','',$admin_id),$order_date,$order_id);
+                $array_merge_recursive=array_merge_recursive($custData,array_merge_recursive($staffData1,$staffData2));
                 // echo '<pre>';print_r($array_merge_recursive);exit;
                 foreach($array_merge_recursive as $notification){
                     if($notification['user_type']=='customer'){
@@ -3475,10 +3507,7 @@ public function deleteItemForSubOrder_post()
                         }else if($notification['user_type']=='KOT'){
                         $title ='OYLY';
                         $message ='table no '.$getCustmoerData[0]['table_no'].' item not available';
-                        }else if($notification['user_type']=='Supervisor'){
-                        $title ='OYLY';
-                        $message ='table No '.$getCustmoerData[0]['table_no'].' item not available';
-                       }
+                        }
                     $result=sendPushNotification($title,$message,$notification['notification_id']);
                       if(!empty($result))
                       {
@@ -3487,7 +3516,7 @@ public function deleteItemForSubOrder_post()
                                       'staff_mobile_no'=>$notification['mobile_no'],
                                       'admin_id'=>$admin_id,
                                       'status'=>1,
-                                      'order_id'=>$order_id2,
+                                      'order_id'=>$order_id,
                                       'sub_order_id'=>$sub_order_id,
                                       'table_no'=>$getCustmoerData[0]['table_no'],
                                       'title'=>$title ,
@@ -3544,7 +3573,8 @@ public function discountForCustomer_post()
           // print_r($waiterData);exit;
           $custData           =$this->Supervisor->getCustData($getCustmoerData[0]['customer_mobile_no']);
           $adminData          =$this->Supervisor->getAdminData($admin_id);
-          $order_id2          =str_replace($admin_id.'-','',$order_id);
+          $order_date         =date('Y-m-d',strtotime($this->Supervisor->getOrderDate($order_id)));
+          $order_id2          =str_replace(str_replace('_','',$admin_id),$order_date,$order_id);
           $array_merge_recursive=array_merge_recursive($custData,$adminData);
           // echo '<pre>';print_r($array_merge_recursive);exit;
           foreach( $array_merge_recursive as $value){
@@ -3563,7 +3593,7 @@ public function discountForCustomer_post()
                                   'staff_mobile_no'=>$value['mobile_no'],
                                   'admin_id'=>$admin_id,
                                   'status'=>1,
-                                  'order_id'=>$order_id2,
+                                  'order_id'=>$order_id,
                                   'table_no'=>$getCustmoerData[0]['table_no'],
                                   'title'=>$title,
                                   'message'=>$message,
@@ -3628,7 +3658,7 @@ public function discountForCustomer_post()
     $result['table_no']     =$data[$i]['table_no'];
     $result['order_status'] =$data[$i]['order_status'];
     $result['admin_id']     =$data[$i]['admin_id'];
-    $result['new_order_id'] =str_replace($data[$i]['admin_id'].'-','',$data[$i]['order_id']);
+    $result['new_order_id'] =str_replace(str_replace('_','',$data[$i]['admin_id']),$data[$i]['date'],$data[$i]['order_id']);
     $menuResult =$this->Supervisor->getMenuItemForOrder($data[$i]['order_id'],$admin_id);
 
     foreach($menuResult as $menuValue)
@@ -3840,11 +3870,12 @@ public function getMasterCategory_post()
    $response->message = "success";
    for($i=0;$i<count($data);$i++)
    {
+    // $result['id']           =$data[$i]['id'];
     $result['order_id']     =$data[$i]['order_id'];
     $result['table_no']     =$data[$i]['table_no'];
     $result['order_status'] =$data[$i]['order_status'];
     $result['admin_id']     =$data[$i]['admin_id'];
-    $result['new_order_id'] =str_replace($data[$i]['admin_id'].'-','',$data[$i]['order_id']);
+    $result['new_order_id'] =str_replace(str_replace('_','',$data[$i]['admin_id']),$data[$i]['date'],$data[$i]['order_id']);
     $menuResult =$this->Supervisor->getMenuItemForOrder($data[$i]['order_id'],$admin_id);
 
     foreach($menuResult as $menuValue)
@@ -4030,7 +4061,7 @@ echo json_output($response);
     $result['table_no']     =$data[$i]['table_no'];
     $result['order_status'] =$data[$i]['order_status'];
     $result['admin_id']     =$data[$i]['admin_id'];
-    $result['new_order_id'] =str_replace($data[$i]['admin_id'].'-','',$data[$i]['order_id']);
+    $result['new_order_id'] =str_replace(str_replace('_','',$data[$i]['admin_id']),$data[$i]['date'],$data[$i]['order_id']);
     $menuResult =$this->Supervisor->getMenuItemForOrder($data[$i]['order_id'],$admin_id);
 
     foreach($menuResult as $menuValue)
@@ -4362,42 +4393,10 @@ public function getRestaurantCategory_post()
   {
       $admin_id=$this->input->post('admin_id');
 
-      $cat_result=$this->Supervisor->getCatIds($admin_id);
-
-      $string='';
-
-      if(!empty($cat_result))
-      {
-            foreach($cat_result AS $value)
-          {
-
-             $string .= "'".$value['cat_id']."'".',';
-          }
-      }
-
       if(!empty($admin_id))
       {
 
-          
-          if(!empty($string))
-          {
-            $result=$this->Supervisor->getRestaurantCategory($admin_id,rtrim($string,','));
-            if(!empty($result))
-            {
-                 $aray=array('status'=>'1','data'=>$result,'message'=>'Success');
-                 $this->response($aray, 200);
-            }else
-            {
-              $aray=array('status'=>'0','message'=>'failed');
-             $this->response($aray, 200);
-            }
-          }else
-          {
-            $aray=array('status'=>'0','message'=>'failed');
-             $this->response($aray, 200);
-          }
-
-
+          $result=$this->Supervisor->getRestaurantCategory($admin_id);
           if(!empty($result))
           {
                $aray=array('status'=>'1','data'=>$result);
@@ -4445,7 +4444,7 @@ public function getRestaurantSubCategory_post()
            
           if(!empty(array_merge($result,$newArray)))
           {
-               $aray=array('status'=>'1','data'=>array_merge($result,$newArray),'message'=>'success');
+               $aray=array('status'=>'1','data'=>array_merge($result,$newArray));
                $this->response($aray, 200);
           }else
           {
@@ -4468,7 +4467,7 @@ public function getRestaurantSubCategory_post()
 }
   public function getMenuListDataRestaurant_post()
   {
-       $admin_id=$this->input->post('admin_id');
+      $admin_id=$this->input->post('admin_id');
       $cat_id=$this->input->post('cat_id');
       $data=array();
       $result=array();
@@ -4477,21 +4476,20 @@ public function getRestaurantSubCategory_post()
       $data2=array();
       $data3=array();
       $data5=array();
-      $data4=array(); 
+      $data4=array();
       $result3=array();
       if(!empty($admin_id)&&!empty($cat_id))
       {
   
           $result=$this->Customer->getSubcatId($admin_id,$cat_id);
-          // print_r($result);exit;
           if(!empty($result))
-          {         
-                    $i=0;
+          {
+                     $i=0;
                     foreach($result as $value)
                     {
                       $data['sub_cat_name']=$value['sub_cat_name'];
                       $data['sub_cat_id']=$value['sub_cat_id'];
-                      $result2=$this->Customer->getSubCatMenuItems($value['sub_cat_id'],$cat_id,$admin_id);
+                      $result2=$this->Supervisor->getSubCatMenuItems($value['sub_cat_id'],$cat_id,$admin_id);
                       // print_r($result2);exit;
                       if(!empty($result2))
                       {
@@ -4499,7 +4497,6 @@ public function getRestaurantSubCategory_post()
                           {
                             $data2['menu_name']=$value2['menu_name'];
                             $data2['menu_category_id']=$value2['menu_category_id'];
-                            
                             $gst       =$this->Supervisor->getGst($value2['menu_category_id'],$admin_id);
                             $menuhalfprice=$value2['menu_half_price'];
                             if(!empty($menuhalfprice))
@@ -4570,8 +4567,8 @@ public function getRestaurantSubCategory_post()
                             $data2['menu_food_type']=$value2['menu_food_type'];
                             $data2['cat_name'] =   $cat_name;
                             $data2['menu_name'] =   $value2['menu_name'];
-                            // $data2['menu_image'] =   $value2['menu_image'] !=''?base_url().'uploads/'.$value2['menu_image']:'';
-                           $data2['menu_image'] =   $value2['menu_image'] !=''?base_url().'uploads/'.$value2['menu_image']:'';
+                            $data2['menu_image'] =   $value2['menu_image'] !=''?base_url().'uploads/'.$value2['menu_image']:'';
+                            /*$data2['menu_image'] = $value2['menu_image']!=''?base64_encode(file_get_contents(base_url().'uploads/'.$value2['menu_image'])):'';*/
                             $data2['menu_detail'] =   $value2['menu_detail'];
                             $data2['menu_half_price'] =   $menu_half_price;
                             $data2['menu_full_price'] =  $menu_full_price;
@@ -4586,7 +4583,7 @@ public function getRestaurantSubCategory_post()
                             $array[]=$data2;
                           }
                       }
-                      $i=$i+1;
+                        $i=$i+1;
                        $data['foodItem']=$array;
                        array_push($result3, $data);
                        $data2=array();
@@ -4594,19 +4591,14 @@ public function getRestaurantSubCategory_post()
                        $data=array();
 
                     }
-          }
-          $result4=$this->Customer->getNaSubCatMenuItems($cat_id,$admin_id);
+                    $result4=$this->Customer->getNaSubCatMenuItems($cat_id,$admin_id);
           if(!empty($result4))
           {
-                $data4['sub_cat_name']='Others';
-                $data4['sub_cat_id']='1';
-                if(!empty($result)){
-                    $j=$i;
-                }else{
-                  $j=0;
-                }                
+            $data4['sub_cat_name']='Others';
+            $data4['sub_cat_id']='NA';
+	         $j=$i;
             foreach($result4 as $value3)
-            {           
+            {
                             $data3['menu_name']=$value3['menu_name'];
                             $data3['menu_category_id']=$value3['menu_category_id'];
                             $gst3       =$this->Supervisor->getGst($value3['menu_category_id'],$admin_id);
@@ -4619,7 +4611,7 @@ public function getRestaurantSubCategory_post()
                               else
                               {
                                 $menu_half_price3='';
-                                $menu_half_price_gst3='';
+                                 $menu_half_price_gst3='';
                               }
                               $menufullprice3=$value3['menu_full_price'];
                               if(!empty($menufullprice3))
@@ -4634,7 +4626,7 @@ public function getRestaurantSubCategory_post()
                                 $menu_full_price_gst3='';
                               }
                               $menufixprice3=$value3['menu_fix_price'];
-                              if(!empty($menufixprice3))
+                              if(!empty($menufixprice))
                               {
                                 $menu_fix_price3=$value3['menu_fix_price'];
                                 $menu_fix_price_gst3 =($menu_fix_price3)*$gst3/100;
@@ -4679,23 +4671,24 @@ public function getRestaurantSubCategory_post()
                             $data3['cat_name'] =   $cat_name3;
 
                             $data3['menu_name'] =   $value3['menu_name'];
-                            // $data3['menu_image'] =   $value3['menu_image'] !=''?base_url().'uploads/'.$value3['menu_image']:'';
                             $data3['menu_image'] =   $value3['menu_image'] !=''?base_url().'uploads/'.$value3['menu_image']:'';
+                            /*$data3['menu_image'] = $value3['menu_image']!=''?base64_encode(file_get_contents(base_url().'uploads/'.$value3['menu_image'])):'';
+*/
                             $data3['menu_detail'] =   $value3['menu_detail'];
                             $data3['menu_half_price'] =   $menu_half_price3;
                             $data3['menu_full_price'] =  $menu_full_price3;
                             $data3['menu_fix_price'] =   $menu_fix_price3;
                             $data3['nutrient_counts'] =   $nutrient_counts3;
-                            $data3['gst'] =  "$gst3";
+                            $data3['gst'] =  "$gst";
                             $data3['menu_half_price_gst'] = "$menu_half_price_gst3";
                             $data3['menu_full_price_gst'] = "$menu_full_price_gst3";
                             $data3['menu_fix_price_gst'] =  "$menu_fix_price_gst3";          
                             $data3['message'] = 'Success';
                             $data3['status']  ='1';
                             $data4['foodItem'][]=$data3;
-                            $j=$j+1;
             }
           }
+
            if(!empty($data4))
            {
                $data5[count($result3)]=$data4;         
@@ -4708,18 +4701,17 @@ public function getRestaurantSubCategory_post()
               $response->data = array_merge($result3);
               echo json_output($response);
            }
-           
-          // }else
-          // {
-          //   $arry['data']=array('status'=>'0','data'=>'failed');
-          //   $this->response($arry, 200);
-          // }
+          }else
+          {
+            $arry['data']=array('status'=>'0','data'=>'failed');
+            $this->response($arry, 200);
+          }
           
       }else
       {
             $arry['data']=array('status'=>'0','data'=>'failed');
             $this->response($arry, 200);
-      }      
+      }
 
   }
 
@@ -4763,37 +4755,4 @@ public function getRestaurantSubCategory_post()
       $this->response($error, 200);
     }
   }
-  public function getCategoryForRestaurant_post()
-{
-  try
-  {
-      $admin_id=$this->input->post('admin_id');
-
-      if(!empty($admin_id))
-      {
-         $result=$this->Supervisor->getCategoryRestaurant($admin_id);
-          if(!empty($result))
-          {
-               $aray=array('status'=>'1','data'=>$result,'message'=>'success');
-               $this->response($aray, 200);
-          }else
-          {
-            $aray=array('status'=>'0','message'=>'failed');
-          $this->response($aray, 200);
-          }
-         
-
-      }else
-      {
-          $aray=array('status'=>'0','message'=>'failed');
-          $this->response($aray, 200);
-      }
-  }catch(Ececption $e)
-  {
-    echo $e->getMessage();
-    $error = array('status' =>'0', "data" => "Internal Server Error - Please try Later.","StatusCode"=> "HTTP405");
-    $this->response($error, 200);
-  }
-  
-}
 }

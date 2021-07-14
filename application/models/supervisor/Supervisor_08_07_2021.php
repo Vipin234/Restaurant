@@ -243,25 +243,17 @@ class Supervisor extends CI_Model
     }
     function get_notification_data($staff_mobile_no)
     {  
-       date_default_timezone_set('Asia/kolkata'); 
-        $now = date('Y-m-d');
-      $q=$this->db->query("SELECT  `order_id`, `admin_id`, `table_no`, `customer_mobile_no`, `title`, `message`, `date_time`, `modified_date`, `status`, `count_status` from tbl_notification_by_staff where staff_mobile_no='$staff_mobile_no'and date_time LIKE '%$now%'order by date_time DESC");
-       // print_r($this->db->last_query());exit;
+      $q=$this->db->query("SELECT  `order_id`, `admin_id`, `table_no`, `customer_mobile_no`, `title`, `message`, `date_time`, `modified_date`, `status`, `count_status` from tbl_notification_by_staff where staff_mobile_no='$staff_mobile_no'order by date_time DESC");
        return($q->result_array());
     }
     function get_notification_data3($staff_mobile_no)
     {  
-       date_default_timezone_set('Asia/kolkata'); 
-        $now = date('Y-m-d');
-      $q=$this->db->query("SELECT  `order_id`, `admin_id`, `table_no`, `customer_mobile_no`, `title`, `message`, `date_time`, `modified_date`, `status`, `count_status` from tbl_notification_by_customer where mobile_no='$staff_mobile_no'and date_time LIKE '%$now%'order by date_time DESC");
-
+      $q=$this->db->query("SELECT  `order_id`, `admin_id`, `table_no`, `customer_mobile_no`, `title`, `message`, `date_time`, `modified_date`, `status`, `count_status` from tbl_notification_by_customer where mobile_no='$staff_mobile_no'order by date_time DESC");
        return($q->result_array());
     }
  function get_notification_data2($staff_mobile_no)
     {  
-       date_default_timezone_set('Asia/kolkata'); 
-        $now = date('Y-m-d');
-      $q=$this->db->query("SELECT  `order_id`, `admin_id`, `table_no`, `customer_mobile_no`, `mobile_no`, `title`, `message`, `date_time`, `modified_date`, `status`, `count_status` from tbl_notification_by_customer where mobile_no='$staff_mobile_no'and date_time LIKE '%$now%' order by date_time DESC");
+      $q=$this->db->query("SELECT  `order_id`, `admin_id`, `table_no`, `customer_mobile_no`, `mobile_no`, `title`, `message`, `date_time`, `modified_date`, `status`, `count_status` from tbl_notification_by_customer where mobile_no='$staff_mobile_no' order by date_time DESC");
        return($q->result_array());
     }
 
@@ -581,14 +573,14 @@ class Supervisor extends CI_Model
      {
         date_default_timezone_set('Asia/kolkata'); 
         $now = date('Y-m-d');
-        $q=$this->db->query("SELECT order_id from tbl_notification_by_staff where staff_mobile_no='".$staff_mobile_no."' and count_status='1' and date_time LIKE '%$now%'");
+        $q=$this->db->query("SELECT order_id from tbl_notification_by_staff where staff_mobile_no='".$staff_mobile_no."' and count_status='1'");
         return($q->num_rows());
      }
    public function check_total_count_notifications2($staff_mobile_no)
      {
         date_default_timezone_set('Asia/kolkata'); 
         $now = date('Y-m-d');
-        $q=$this->db->query("SELECT order_id from tbl_notification_by_customer where mobile_no='".$staff_mobile_no."' and count_status='1' and date_time LIKE '%$now%'");
+        $q=$this->db->query("SELECT order_id from tbl_notification_by_customer where mobile_no='".$staff_mobile_no."' and count_status='1'");
         return($q->num_rows());
      }
      function check_status_for_notifications($check_status,$staff_mobile_no)
@@ -1538,7 +1530,17 @@ public function getGstInforForOrder($order_id,$admin_id)
        $result=$query->result_array();
        return $result;
   }
-    
+      public function getCategoryRestaurant($admin_id)
+  {
+       $this->db->select('*');
+       $this->db->from('misc_category');
+       $this->db->where('admin_id',$admin_id);
+       $this->db->where('status',1);
+       $query=$this->db->get();
+       //print_r($this->db->last_query());exit;
+       $result=$query->result_array();
+       return $result;
+  }
     function getCatIds($admin_id)
   {
     $this->db->select('DISTINCT(cat_id)');
@@ -1906,17 +1908,6 @@ public function getRestaurantStaffNotification($admin_id,$mobile_no)
     // print_r($this->db->last_query());exit;
     $result=$query->result_array();
     return $result;
-  }
-  public function getCategoryRestaurant($admin_id)
-  {
-       $this->db->select('*');
-       $this->db->from('misc_category');
-       $this->db->where('admin_id',$admin_id);
-       $this->db->where('status',1);
-       $query=$this->db->get();
-       //print_r($this->db->last_query());exit;
-       $result=$query->result_array();
-       return $result;
   }
 }
 ?>

@@ -45,7 +45,7 @@ class SuperAdmin extends CI_Controller
 					$row[] 	=$list->user_fullname;
 					$row[] 	=$list->user_email;
 					$row[] 	=$list->mobile_no;
-					$row[] 	=$this->encrypt->decode($list->user_password, $list->salt);
+					$row[] 	=$this->encrypt->decode($list->user_password,$list->salt);
 					$row[] 	=$list->user_createdate;
 					$row[] 	=$list->user_role=='2'?'Super Admin':'Admin';
 		      		$button =$list->status==1?'Active':'Deactive';
@@ -60,7 +60,7 @@ class SuperAdmin extends CI_Controller
 								"recordsFiltered" => $this->SuperAdmin_model->count_filtered(),
 								"data" => $data,
 						);
-			echo json_encode($output);
+			echo json_encode($output);exit;
 		            
 		    }catch(Eception $e)
 		    {
@@ -257,6 +257,7 @@ public function getAdmin()
             exit();
         }
     }
+  
 }
 
 

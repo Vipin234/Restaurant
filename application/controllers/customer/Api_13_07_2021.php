@@ -2870,26 +2870,5 @@ public function laterReview_post()
       $this->response($error, 200);
     }
   }
-function checkLoginStatus_post(){
-  try{
-  $mobile_no    =$_POST['mobile_no'];
-  $device_id    =$_POST['device_id'];
-  $cus_id       =$_POST['cus_id'];
-  if(!empty($mobile_no)&&!empty($device_id)&& !empty($cus_id)){
-    $result=$this->Customer->checkLoginStatus($mobile_no,$device_id,$cus_id);
-        // print_r($result);exit;
-        if(!empty($result[0]['notification_id'])){
-          echo json_encode(array('status'=>1,'message'=>'success'));exit();
-        }else{
-          echo json_encode(array('status'=>0,'message'=>'logout success'));exit();
-        }
-  }else{
-    echo json_encode(array('status'=>0,'message'=>'logout success'));exit();
-  }
-  }catch(Ececption $e){
-      $e->getMessage();
-      $error = array('status' =>'0', "data" => "Internal Server Error - Please try Later.","StatusCode"=> "HTTP405");
-      $this->response($error, 200);
-  }
-}
+
 }

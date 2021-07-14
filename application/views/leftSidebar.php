@@ -31,8 +31,14 @@
                       <a><i class="fa fa-home"></i>Restaurant<span class="fa fa-chevron-down"></span></a>
                       <ul class="nav child_menu">
                          <li><a href="<?php echo base_url();?>index.php/Admin/dashboard"><i class="fa fa-home"></i>Restaurant</a>
+<<<<<<< slave
                         <li><a href="<?php echo base_url();?>index.php/Admin/dashboard"><i class="fa fa-home"></i>Restaurant</a>
                          <li><a href="<?php echo base_url();?>index.php/Admin/dashboard"><i class="fa fa-home"></i>Restaurant</a>
+=======
+                        <li><a href="<?php echo base_url();?>index.php/RestaurantType/RestaurantType"><i class="fa fa-home"></i>Types</a>
+                        <!--  <li>
+                          <a href="<?php echo base_url();?>index.php/Admin/dashboard"><i class="fa fa-home"></i>Restaurant</a> -->
+>>>>>>> local
                     </ul>
                     </li>
                   </li>

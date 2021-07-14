@@ -85,7 +85,7 @@ function sendPushNotification($title,$message,$notification_id)
             } else if ($push_type == 'individual' && !empty($notification_id)){
                 $json = $push->getPush();
                 $json2=$firebase->send($notification_id, $json);
-                //print_r($json2);exit;
+                // print_r($json2);exit;
                  if(json_decode($json2)->success==1)
                     {
                         return TRUE;

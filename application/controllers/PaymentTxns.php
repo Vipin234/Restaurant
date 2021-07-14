@@ -52,8 +52,8 @@ function GetPaymentTxns()
           $row[]  =$list->settled_amount;
           $row[]  =$list->total_gst;
           $amount_without_gst=$list->settled_amount-$list->total_gst;
-          $convenience=$amount_without_gst*1/100;
-          $gstRest=$convenience*18/100;
+          $convenience=$amount_without_gst*($this->PaymentTxnsModel->getConvience($list->convenience_code))/100;
+          $gstRest=$convenience*($this->PaymentTxnsModel->getGstValue($list->gst_code))/100;
           $row[]  =number_format($amount_without_gst-($convenience+$gstRest)+$list->total_gst,2);
           $row[]  =number_format($convenience+$gstRest,2);
           $row[]  =$list->creation_date;

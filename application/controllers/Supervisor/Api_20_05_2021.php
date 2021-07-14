@@ -19,7 +19,7 @@ class Api extends REST_Controller {
   $this->load->library('upload');    
   $this->load->helper('url');
   $this->load->helper('main_helper');   
-  $this->load->library('form_validation');
+  $this->load->library('formadd_menu_item_for_restaurant_post_validation');
   $this->load->library('encrypt'); 
 
   //$this->output->cache(5);        
